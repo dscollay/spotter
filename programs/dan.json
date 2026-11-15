@@ -1,67 +1,149 @@
 {
   "profile": "dan",
-  "program_name": "placeholder - replace with coach program",
+  "program_name": "Dan Block 1 - Restart Strength",
   "start_date": "2026-11-16",
   "sessions_before_new_program": 18,
+  "progression_rule": "Main lifts (deadlift, bench, step-up): when every set is done with clean form at RPE 8 or easier, add weight next time: deadlift +5 kg, bench and step-up +2.5 kg, row +2.5 kg. If you miss reps, repeat the weight. Miss twice in a row, drop 10% and build back. Chin-ups: add 1 rep per set up to 4x6, then switch to a lighter band and go back to 4x3. Dips: add 1 rep per set up to 3x10 before any added load. Sessions 16-18 are a deload: 2 rounds only, same weights, finish early. Busy-week minimum: 2 rounds of A1 and A3 only (about 20 min). Back after 7+ days off (illness, travel, moving): use 80% of your last weights for 2 sessions, then carry on. Strength is weekdays 5:30-6:30; cardio is separate (weekend or a spare morning) and gets logged as cardio, not here. Sharp pain, numbness or a niggle that isn't settling: stop that lift and see a GP or physio.",
   "days": [
     {
-      "name": "day 1",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day A - Deadlift, Bench, Chin",
+      "warmup": "5 min easy bike. 10 glute bridges, 10 bodyweight box squats, 10 band pull-aparts, 30 s dead hang. Then 2-3 lighter ramp-up sets on deadlift and bench (bar, ~50%, ~75%).",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 2,
-          "rest_between_rounds_sec": 8,
+          "label": "A",
+          "rounds": 4,
+          "rest_between_rounds_sec": 90,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder hinge",
-              "sets": 2,
-              "reps": "5",
+              "slot": "A1",
+              "name": "Barbell deadlift",
+              "sets": 4,
+              "reps": 5,
               "work_sec": null,
-              "unit": "lb",
-              "rest_sec": 8,
-              "notes": "Placeholder only. Not a real prescription."
+              "load": 95,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "controlled down, reset each rep",
+              "rest_sec": 60,
+              "video_url": "https://www.youtube.com/results?search_query=Barbell+deadlift+exercise+technique",
+              "notes": "Brace before each pull, bar close to the shins. Last diary best 120x5, so start well under."
             },
             {
-              "slot": "a2",
-              "name": "placeholder carry",
-              "sets": 2,
-              "reps": null,
-              "work_sec": 8,
-              "unit": "lb",
-              "rest_sec": 8,
-              "notes": "Timed placeholder only."
+              "slot": "A2",
+              "name": "Band-assisted chin-up",
+              "sets": 4,
+              "reps": 4,
+              "work_sec": null,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 8,
+              "tempo": "3 s lower",
+              "rest_sec": 45,
+              "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
+              "notes": "Use the band that lets you get 4 clean reps. Full hang at the bottom, chin over the bar."
+            },
+            {
+              "slot": "A3",
+              "name": "Barbell bench press",
+              "sets": 4,
+              "reps": 5,
+              "work_sec": null,
+              "load": 62.5,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "1 s pause on chest",
+              "rest_sec": 60,
+              "video_url": "https://www.youtube.com/results?search_query=Barbell+bench+press+exercise+technique",
+              "notes": "Shoulder blades pinned, feet planted. Diary best 75x5."
+            },
+            {
+              "slot": "A4",
+              "name": "Cable rope face pull",
+              "sets": 4,
+              "reps": 12,
+              "work_sec": null,
+              "load": 15,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "1 s squeeze",
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=cable+rope+face+pull+exercise+technique",
+              "notes": "Pull to the eyebrows, thumbs back. Posture work for the desk days."
             }
           ]
         }
       ]
     },
     {
-      "name": "day 2",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day B - Step-up, Row, Dip",
+      "warmup": "5 min easy bike. 10 glute bridges each leg, 10 walking lunges, 10 band pull-aparts, 5 slow bodyweight dips at shallow depth. Ramp-up: 1 set of 6 step-ups each leg with the bar only.",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 1,
-          "rest_between_rounds_sec": 0,
+          "label": "A",
+          "rounds": 4,
+          "rest_between_rounds_sec": 90,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder hinge",
-              "sets": 1,
-              "reps": "5",
+              "slot": "A1",
+              "name": "Barbell step-up",
+              "sets": 4,
+              "reps": 8,
               "work_sec": null,
-              "unit": "lb",
-              "rest_sec": 8,
-              "notes": "Placeholder only."
+              "load": 50,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "drive through the top foot",
+              "rest_sec": 60,
+              "video_url": "https://www.youtube.com/results?search_query=barbell+step+up+exercise+technique",
+              "notes": "8 each leg. Knee-height box. Diary best 60x8. Replaces back squat for now."
+            },
+            {
+              "slot": "A2",
+              "name": "One-arm dumbbell row",
+              "sets": 4,
+              "reps": 8,
+              "work_sec": null,
+              "load": 32.5,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "1 s squeeze at the top",
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=one+arm+dumbbell+row+exercise+technique",
+              "notes": "8 each arm, hand on bench. Diary best about 41.5x5."
+            },
+            {
+              "slot": "A3",
+              "name": "Parallel-bar dip (bike seat and treadmill arm)",
+              "sets": 3,
+              "reps": 6,
+              "work_sec": null,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "2 s down",
+              "rest_sec": 60,
+              "video_url": "https://www.youtube.com/results?search_query=parallel+bar+dip+exercise+technique",
+              "notes": "Bodyweight only. Go down until upper arms are parallel, no deeper. Stop if the shoulder complains."
+            },
+            {
+              "slot": "A4",
+              "name": "Cable Pallof press",
+              "sets": 4,
+              "reps": 10,
+              "work_sec": null,
+              "load": 10,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "2 s hold out front",
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=cable+pallof+press+exercise+technique",
+              "notes": "10 each side. Ribs down, don't let the cable turn you."
             }
           ]
         }
       ]
     }
-  ],
-  "progression_rule": "Placeholder. The coach replaces this text with the real progression rule."
+  ]
 }

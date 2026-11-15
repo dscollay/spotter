@@ -41,6 +41,18 @@ function optString(obj: Record<string, unknown>, key: string, path: string, erro
   return trimmed ? trimmed : undefined;
 }
 
+function optStringOrFiniteNumber(obj: Record<string, unknown>, key: string, path: string, errors: string[]): string | undefined {
+  if (!(key in obj) || obj[key] == null) return undefined;
+  const value = obj[key];
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value !== 'string') {
+    push(errors, `${path}.${key} must be a string when it is present.`);
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 function reqInt(obj: Record<string, unknown>, key: string, path: string, errors: string[], min: number): number | null {
   const value = obj[key];
   if (typeof value !== 'number' || !Number.isInteger(value) || value < min) {
@@ -118,7 +130,9 @@ function parseExercise(value: unknown, path: string, errors: string[]): Exercise
   } else if (!hasReps && !hasWork) {
     push(errors, `${path}: set reps or work_sec, and set the other to null.`);
   } else if (hasReps) {
-    if (typeof obj.reps !== 'string' || obj.reps.trim() === '') {
+    if (typeof obj.reps === 'number' && Number.isFinite(obj.reps)) {
+      reps = String(obj.reps);
+    } else if (typeof obj.reps !== 'string' || obj.reps.trim() === '') {
       push(errors, `${path}.reps must be a string such as "8-10".`);
     } else {
       reps = obj.reps.trim();
@@ -134,7 +148,7 @@ function parseExercise(value: unknown, path: string, errors: string[]): Exercise
   }
   if (!slot || !name || sets == null || (reps == null && work == null)) return null;
   const exercise: Exercise = { slot, name, sets, reps, work_sec: work };
-  const load = optString(obj, 'load', path, errors);
+  const load = optStringOrFiniteNumber(obj, 'load', path, errors);
   const unit = optUnit(obj, path, errors);
   const rpe = optNumber(obj, 'rpe', path, errors);
   const tempo = optString(obj, 'tempo', path, errors);

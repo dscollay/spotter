@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseBackup } from '../src/backup.ts';
+import { prescriptionLine } from '../src/format.ts';
 import { buildSteps, nextDayIndex, parseProgram } from '../src/program.ts';
 import type { Program, Session } from '../src/types.ts';
 
@@ -56,6 +57,49 @@ const badVideo = structuredClone(readJson('bonnie')) as {
 badVideo.days[0].circuits[0].exercises[1].video_url = 'javascript:alert(1)';
 const badVideoResult = parseProgram(badVideo);
 assert.equal(badVideoResult.ok, false);
+
+const numeric = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+numeric.days[0].circuits[0].exercises[0].reps = 8;
+numeric.days[0].circuits[0].exercises[0].load = 12.5;
+const numericResult = parseProgram(numeric);
+assert.equal(numericResult.ok, true, numericResult.ok ? '' : numericResult.errors.join('\n'));
+if (numericResult.ok) {
+  const exercise = numericResult.value.days[0].circuits[0].exercises[0];
+  assert.equal(exercise.reps, '8');
+  assert.equal(exercise.load, '12.5');
+  assert.equal(prescriptionLine(exercise), '2 sets · 8 reps · 12.5 kg · RPE 6 · tempo 3010');
+}
+
+const labeled = programs.get('bonnie')?.days[0].circuits[0].exercises[0];
+assert.ok(labeled);
+assert.equal(prescriptionLine(labeled), '2 sets · 8 reps · bodyweight · RPE 6 · tempo 3010');
+
+const zeroLoad = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+zeroLoad.days[0].circuits[0].exercises[0].reps = 5;
+zeroLoad.days[0].circuits[0].exercises[0].load = 0;
+const zeroLoadResult = parseProgram(zeroLoad);
+assert.equal(zeroLoadResult.ok, true, zeroLoadResult.ok ? '' : zeroLoadResult.errors.join('\n'));
+if (zeroLoadResult.ok) assert.equal(zeroLoadResult.value.days[0].circuits[0].exercises[0].load, '0');
+
+const badReps = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+badReps.days[0].circuits[0].exercises[0].reps = true;
+const badRepsResult = parseProgram(badReps);
+assert.equal(badRepsResult.ok, false);
+if (!badRepsResult.ok) assert.match(badRepsResult.errors.join('\n'), /reps must be a string/);
+
+const badLoad = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+badLoad.days[0].circuits[0].exercises[0].load = Number.POSITIVE_INFINITY;
+const badLoadResult = parseProgram(badLoad);
+assert.equal(badLoadResult.ok, false);
+if (!badLoadResult.ok) assert.match(badLoadResult.errors.join('\n'), /load must be a string/);
 
 const bonnieProgram = programs.get('bonnie');
 assert.ok(bonnieProgram);
