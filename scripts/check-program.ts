@@ -57,6 +57,41 @@ badVideo.days[0].circuits[0].exercises[1].video_url = 'javascript:alert(1)';
 const badVideoResult = parseProgram(badVideo);
 assert.equal(badVideoResult.ok, false);
 
+const numeric = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+numeric.days[0].circuits[0].exercises[0].reps = 8;
+numeric.days[0].circuits[0].exercises[0].load = 12.5;
+const numericResult = parseProgram(numeric);
+assert.equal(numericResult.ok, true, numericResult.ok ? '' : numericResult.errors.join('\n'));
+if (numericResult.ok) {
+  const exercise = numericResult.value.days[0].circuits[0].exercises[0];
+  assert.equal(exercise.reps, '8');
+  assert.equal(exercise.load, '12.5');
+}
+
+const zeroLoad = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+zeroLoad.days[0].circuits[0].exercises[0].reps = 5;
+zeroLoad.days[0].circuits[0].exercises[0].load = 0;
+const zeroLoadResult = parseProgram(zeroLoad);
+assert.equal(zeroLoadResult.ok, true, zeroLoadResult.ok ? '' : zeroLoadResult.errors.join('\n'));
+if (zeroLoadResult.ok) assert.equal(zeroLoadResult.value.days[0].circuits[0].exercises[0].load, '0');
+
+const badNumber = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+badNumber.days[0].circuits[0].exercises[0].reps = true;
+badNumber.days[0].circuits[0].exercises[0].load = Number.POSITIVE_INFINITY;
+const badNumberResult = parseProgram(badNumber);
+assert.equal(badNumberResult.ok, false);
+if (!badNumberResult.ok) {
+  const text = badNumberResult.errors.join('\n');
+  assert.match(text, /reps must be a string/);
+  assert.match(text, /load must be a string/);
+}
+
 const bonnieProgram = programs.get('bonnie');
 assert.ok(bonnieProgram);
 const steps = buildSteps(bonnieProgram.days[0]);
