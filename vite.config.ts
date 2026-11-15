@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -22,6 +22,33 @@ function walk(dir: string): string[] {
   return out;
 }
 
+function repoPrograms(): Plugin {
+  const sourceDir = join(process.cwd(), 'programs');
+  return {
+    name: 'repo-programs',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const path = req.url?.split('?')[0] ?? '';
+        const match = path.match(/\/programs\/(dan|bonnie|audrey)\.json$/);
+        if (!match) {
+          next();
+          return;
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(readFileSync(join(sourceDir, `${match[1]}.json`)));
+      });
+    },
+    closeBundle() {
+      const dest = join(process.cwd(), 'dist', 'programs');
+      mkdirSync(dest, { recursive: true });
+      for (const name of ['dan', 'bonnie', 'audrey']) {
+        copyFileSync(join(sourceDir, `${name}.json`), join(dest, `${name}.json`));
+      }
+    },
+  };
+}
+
 function emitServiceWorker(): Plugin {
   return {
     name: 'spotter-service-worker',
@@ -30,7 +57,7 @@ function emitServiceWorker(): Plugin {
       const dist = join(process.cwd(), 'dist');
       const files = walk(dist)
         .map((file) => relative(dist, file).split('\\').join('/'))
-        .filter((file) => file !== 'sw.js' && !file.split('/').some((part) => part.startsWith('_')))
+        .filter((file) => file !== 'sw.js' && !file.startsWith('programs/') && !file.split('/').some((part) => part.startsWith('_')))
         .sort();
       const hash = createHash('sha256');
       for (const file of files) {
@@ -65,6 +92,11 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.split('/').includes('programs') && url.pathname.endsWith('.json')) {
+    // Network only. A cached program file would replace a newer one already on the phone.
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
   event.respondWith(
     (async () => {
       const cached = await caches.match(event.request);
@@ -94,5 +126,5 @@ self.addEventListener('fetch', (event) => {
 
 export default defineConfig({
   base: normalizeBase(process.env.VITE_BASE),
-  plugins: [react(), emitServiceWorker()],
+  plugins: [repoPrograms(), react(), emitServiceWorker()],
 });

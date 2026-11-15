@@ -1,7 +1,7 @@
 import audreyProgram from './programs/audrey.json';
 import bonnieProgram from './programs/bonnie.json';
 import danProgram from './programs/dan.json';
-import { parseProgram } from './program';
+import { parseProgram, programStamp } from './program';
 import type { ProfileId, Program, Session } from './types';
 import { isProfileId, PROFILE_IDS } from './types';
 
@@ -102,6 +102,40 @@ export async function getLastBackup(): Promise<string | null> {
 
 export async function setLastBackup(iso: string): Promise<void> {
   await setMeta('lastBackupAt', iso);
+}
+
+export async function getSummaryAt(profile: ProfileId): Promise<string | null> {
+  const value = await getMeta(`summaryAt:${profile}`);
+  return typeof value === 'string' ? value : null;
+}
+
+export async function setSummaryAt(profile: ProfileId, iso: string): Promise<void> {
+  await setMeta(`summaryAt:${profile}`, iso);
+}
+
+function fetchProgram(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  return fetch(url, { cache: 'no-store', signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
+export async function syncRepoPrograms(): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  await Promise.all(
+    PROFILE_IDS.map(async (profile) => {
+      try {
+        const response = await fetchProgram(`${import.meta.env.BASE_URL}programs/${profile}.json`);
+        if (!response.ok) return;
+        const parsed = parseProgram(await response.json());
+        if (!parsed.ok || parsed.value.profile !== profile) return;
+        const current = await getProgram(profile);
+        if (current && programStamp(current) === programStamp(parsed.value)) return;
+        await putProgram(parsed.value);
+      } catch {
+        // Offline or a bad file: keep the program already stored.
+      }
+    }),
+  );
 }
 
 export async function getProgram(profile: ProfileId): Promise<Program | null> {

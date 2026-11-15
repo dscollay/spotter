@@ -9,6 +9,7 @@ import { WorkoutScreen } from './screens/WorkoutScreen';
 import {
   deleteSession,
   ensureSeeded,
+  syncRepoPrograms,
   getActiveProfile,
   getLastBackup,
   getProgram,
@@ -65,6 +66,13 @@ export function App() {
           setScreen({ name: 'home' });
         }
         setReady(true);
+        void syncRepoPrograms().then(async () => {
+          if (!live) return;
+          const current = await getActiveProfile();
+          if (!current || !live) return;
+          setProgram(await getProgram(current));
+          setSessions(await listSessions(current));
+        });
       } catch (error) {
         if (!live) return;
         setBootError(error instanceof Error ? error.message : 'Could not open the log.');
