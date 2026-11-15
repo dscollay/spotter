@@ -286,6 +286,16 @@ export function buildSteps(day: Day): Step[] {
   return steps;
 }
 
+export function programStamp(program: Program): string {
+  let hash = 0x811c9dc5;
+  const text = JSON.stringify(program);
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${program.program_name}:${(hash >>> 0).toString(16).padStart(8, '0')}`;
+}
+
 export function circuitsDone(day: Day, sets: SetLog[]): number {
   return day.circuits.filter((circuit, circuitIndex) => {
     const need = circuit.rounds * circuit.exercises.length;

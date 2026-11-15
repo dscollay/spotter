@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { backupIsStale, formatWhen, profileName } from '../format';
 import { completedProgramSessions, nextDayIndex } from '../program';
+import { sendCoachSummary } from '../summary';
 import type { ProfileId, Program, Session } from '../types';
 import { Dialog } from '../ui';
 import { armKeepAwake } from '../wake';
@@ -31,6 +32,7 @@ export function HomeScreen({
   const inProgress = sessions.find((session) => session.status === 'in_progress');
   const stale = backupIsStale(lastBackupAt);
   const [discardId, setDiscardId] = useState<string | null>(null);
+  const [coachNote, setCoachNote] = useState('');
   return (
     <>
       <p className="wordmark">Spotter</p>
@@ -73,6 +75,19 @@ export function HomeScreen({
           onDiscard={setDiscardId}
         />
       )}
+      <button
+        type="button"
+        className="secondary"
+        onClick={() => {
+          void sendCoachSummary(profile, sessions).then((result) => {
+            if (result === 'cancelled') return;
+            setCoachNote(result === 'sent' ? 'Sent to the share sheet.' : 'Copied the summary and downloaded the JSON.');
+          });
+        }}
+      >
+        Send to coach
+      </button>
+      {coachNote && <p className="ok">{coachNote}</p>}
       {discardId && (
         <Dialog
           title="Discard this workout?"

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { audioArmed, beep, unlockAudio } from '../audio';
-import { exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatLastWhen, formatSetSummary, prescriptionLine } from '../format';
-import { buildSteps, circuitsDone, latestSet, type ExerciseStep, type Step } from '../program';
-import type { Exercise, Flag, Session, SetLog } from '../types';
+import { beep, unlockAudio } from '../audio';
+import { exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatNumber, formatSetSummary, repTarget } from '../format';
+import { buildSteps, circuitsDone, latestSet, type ExerciseStep } from '../program';
+import type { Flag, Session, SetLog } from '../types';
 import { FLAG_LABELS, FLAGS } from '../types';
 import { armKeepAwake, releaseKeepAwake, type WakeStatus } from '../wake';
 import { Dialog } from '../ui';
@@ -80,7 +80,8 @@ export function WorkoutScreen({
       reps: values.reps,
       note: values.note,
       flag: values.flag,
-      workSec: stepToLog.exercise.work_sec,
+      workSec: values.workSec,
+      made: values.made,
       loggedAt: new Date().toISOString(),
     };
     const sets = [...session.sets, set];
@@ -109,14 +110,13 @@ export function WorkoutScreen({
 
   return (
     <>
-      <div className="split">
-        <p className="wordmark">Spotter</p>
-        <p className="muted">{formatElapsed(clock)}</p>
+      <div className="split workout-top">
+        <p>
+          {session.dayName} · {exerciseOrdinal} of {exerciseTotal}
+        </p>
+        <p>{formatElapsed(clock)}</p>
       </div>
-      <p className="muted">
-        {session.dayName} · {exerciseOrdinal} of {exerciseTotal} exercises
-      </p>
-      <p className="muted">{wakeMessage(wake)}</p>
+      {wake !== 'on' && wake !== 'pending' && <p className="muted">{wakeMessage(wake)}</p>}
       {!step && (
         <section className="card">
           <h2>Nothing left in this workout</h2>
@@ -126,28 +126,22 @@ export function WorkoutScreen({
         </section>
       )}
       {step?.kind === 'exercise' && (
-        <ExerciseCard
+        <SetLogger
           key={session.stepIndex}
           step={step}
-          next={steps[session.stepIndex + 1]}
           sessions={sessions}
           onLog={(values) => commit(step, values)}
+          onExit={onExit}
+          onFinish={() => setConfirm('finish')}
+          onDiscard={() => setConfirm('discard')}
         />
       )}
       {step?.kind === 'rest' && (
-        <RestTimer key={session.stepIndex} seconds={step.seconds} reason={step.reason} onDone={() => advance()} />
+        <>
+          <RestTimer key={session.stepIndex} seconds={step.seconds} reason={step.reason} onDone={() => advance()} />
+          <MoreActions onExit={onExit} onFinish={() => setConfirm('finish')} onDiscard={() => setConfirm('discard')} />
+        </>
       )}
-      <div className="dock">
-        <button type="button" className="secondary" onClick={onExit}>
-          Save and exit
-        </button>
-        <button type="button" className="ghost" onClick={() => setConfirm('finish')}>
-          Finish workout
-        </button>
-        <button type="button" className="ghost" onClick={() => setConfirm('discard')}>
-          Discard workout
-        </button>
-      </div>
       {confirm === 'finish' && (
         <Dialog title="Finish this workout?" confirmLabel="Finish and save" onConfirm={() => void finish()} onCancel={() => setConfirm(null)}>
           <p>Sets you logged stay in history. Circuits you did not complete count as not done.</p>
@@ -175,127 +169,154 @@ function wakeMessage(wake: WakeStatus | 'pending'): string {
   return 'Keeping the screen on…';
 }
 
-function ExerciseCard({
+type LogDraft = {
+  load: number | null;
+  reps: number | null;
+  workSec: number | null;
+  note: string;
+  flag: Flag | null;
+  made: boolean;
+};
+
+function SetLogger({
   step,
-  next,
   sessions,
   onLog,
+  onExit,
+  onFinish,
+  onDiscard,
 }: {
   step: ExerciseStep;
-  next: Step | undefined;
   sessions: Session[];
   onLog: (values: LogDraft) => Promise<void>;
+  onExit: () => void;
+  onFinish: () => void;
+  onDiscard: () => void;
 }) {
   const exercise = step.exercise;
   const previous = latestSet(sessions, exercise.name);
-  const unit = exerciseUnit(exercise);
-  return (
-    <section className="card">
-      <p className="eyebrow">
-        Circuit {step.circuitLabel.toUpperCase()} · Round {step.round} of {step.rounds}
-      </p>
-      <p className="slot">{exercise.slot.toUpperCase()}</p>
-      <h2 className="exercise-name">{exercise.name}</h2>
-      <p>{prescriptionLine(exercise)}</p>
-      {exercise.notes && <p className="notes">{exercise.notes}</p>}
-      {!exercise.unit && <p className="muted">No unit on this exercise. Load is logged as {unit}.</p>}
-      <div className="last">
-        <p className="eyebrow">Last time</p>
-        {previous ? (
-          <>
-            <p>
-              <strong>{formatSetSummary(previous.set)}</strong>
-            </p>
-            <p>{formatLastWhen(previous.session, previous.set)}</p>
-            {previous.set.note && <p>“{previous.set.note}”</p>}
-            {previous.set.flag && <p>{formatFlag(previous.set.flag)}</p>}
-          </>
-        ) : (
-          <p>No log yet.</p>
-        )}
-      </div>
-      {exercise.work_sec != null && <WorkTimer seconds={exercise.work_sec} />}
-      {exercise.video_url && (
-        <p>
-          <a className="secondary" href={exercise.video_url} target="_blank" rel="noopener noreferrer">
-            Play video
-          </a>
-        </p>
-      )}
-      {next?.kind === 'rest' && <p className="muted">Next is a {next.seconds}s rest. It waits until you tap Start.</p>}
-      <LogForm exercise={exercise} onLog={onLog} />
-    </section>
-  );
-}
-
-type LogDraft = { load: number | null; reps: number | null; note: string; flag: Flag | null };
-
-function LogForm({ exercise, onLog }: { exercise: Exercise; onLog: (values: LogDraft) => Promise<void> }) {
-  const [load, setLoad] = useState('');
-  const [reps, setReps] = useState('');
+  const timed = exercise.work_sec != null;
+  const target = exercise.reps ? repTarget(exercise.reps) : null;
+  const [load, setLoad] = useState(previous?.set.load != null ? formatNumber(previous.set.load) : '');
   const [note, setNote] = useState('');
   const [flag, setFlag] = useState<Flag | null>(null);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const unit = exerciseUnit(exercise);
-  const timed = exercise.work_sec != null;
+  const [ask, setAsk] = useState<'reps' | 'time' | null>(null);
+  const [actual, setActual] = useState('');
+  const timer = useCountdown(exercise.work_sec ?? 0);
 
-  async function submit() {
+  async function save(values: Omit<LogDraft, 'load' | 'note' | 'flag'> & { load?: number | null }) {
     if (pending) return;
     const parsedLoad = parseDecimal(load);
-    const parsedReps = parseWhole(reps);
-    if (Number.isNaN(parsedLoad)) {
-      setError('Enter load as a number, like 12 or 12.5.');
-      return;
-    }
-    if (parsedLoad != null && parsedLoad > 2000) {
-      setError('That load looks off. Check the number.');
-      return;
-    }
-    if (Number.isNaN(parsedReps)) {
-      setError('Enter reps as a whole number.');
-      return;
-    }
-    if (!timed && parsedReps == null) {
-      setError('Enter the reps you did.');
-      return;
-    }
-    if (parsedReps != null && parsedReps > 500) {
-      setError('That rep count looks off. Check the number.');
+    if (Number.isNaN(parsedLoad) || (parsedLoad != null && parsedLoad > 2000)) {
+      setError(Number.isNaN(parsedLoad) ? 'Enter the weight as a number.' : 'That weight looks off.');
       return;
     }
     setError('');
     setPending(true);
     try {
-      await onLog({ load: parsedLoad, reps: parsedReps, note: note.trim(), flag });
+      await onLog({
+        load: parsedLoad,
+        reps: values.reps,
+        workSec: values.workSec,
+        note: note.trim(),
+        flag,
+        made: values.made,
+      });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not save that set.');
-    } finally {
       setPending(false);
     }
   }
 
+  const unit = exerciseUnit(exercise);
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        void submit();
-      }}
-    >
-      <label className="field">
-        <span>Load ({unit})</span>
+    <section className="focus">
+      <p className="where">
+        {exercise.slot.toUpperCase()} · round {step.round} of {step.rounds}
+      </p>
+      <h1>{exercise.name}</h1>
+      {exercise.notes && <p className="cue">{exercise.notes}</p>}
+      <p className="last-line">{previous ? `Last time ${formatSetSummary(previous.set)}` : 'No log yet'}</p>
+      {timed && exercise.work_sec != null && (
+        <div className={timer.flash ? 'timer flash' : 'timer'}>
+          <p className="timer-num">{timer.display}</p>
+          <BeepRow timer={timer} />
+        </div>
+      )}
+      <label className="field weight">
+        <span>Weight ({unit})</span>
         <input id="load" inputMode="decimal" autoComplete="off" value={load} onChange={(event) => setLoad(event.target.value)} />
-      </label>
-      <label className="field">
-        <span>{timed ? 'Reps, if you counted' : 'Reps'}</span>
-        <input id="reps" inputMode="numeric" autoComplete="off" value={reps} onChange={(event) => setReps(event.target.value)} />
       </label>
       <label className="field">
         <span>Note</span>
         <input id="note" maxLength={280} value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
-      <div className="field">
-        <span className="field-label">Flag</span>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {timed ? (
+        <>
+          {!timer.running && !timer.done && (
+            <button type="button" className="primary" onClick={timer.start}>
+              Start
+            </button>
+          )}
+          {timer.done && (
+            <button
+              type="button"
+              className="primary tick"
+              disabled={pending}
+              onClick={() => void save({ reps: null, workSec: exercise.work_sec, made: true })}
+            >
+              Done
+            </button>
+          )}
+          <button
+            type="button"
+            className="quiet"
+            onClick={() => {
+              setActual('');
+              setError('');
+              setAsk('time');
+            }}
+          >
+            Didn't make the time
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="primary tick"
+            disabled={pending || !target}
+            onClick={() => void save({ reps: target?.count ?? null, workSec: null, made: true })}
+          >
+            {target?.label ?? exercise.reps}
+          </button>
+          <button
+            type="button"
+            className="quiet"
+            onClick={() => {
+              setActual('');
+              setError('');
+              setAsk('reps');
+            }}
+          >
+            Missed reps
+          </button>
+        </>
+      )}
+      <details className="more">
+        <summary>More</summary>
+        {exercise.video_url && (
+          <a className="secondary" href={exercise.video_url} target="_blank" rel="noopener noreferrer">
+            Play video
+          </a>
+        )}
         <div className="flags">
           {FLAGS.map((item) => (
             <button
@@ -309,16 +330,68 @@ function LogForm({ exercise, onLog }: { exercise: Exercise; onLog: (values: LogD
             </button>
           ))}
         </div>
-      </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
+        <MoreActions onExit={onExit} onFinish={onFinish} onDiscard={onDiscard} />
+      </details>
+      {ask === 'reps' && (
+        <Dialog title="Missed reps" confirmLabel="Save reps" onConfirm={() => void saveMiss()} onCancel={() => setAsk(null)}>
+          <label className="field">
+            <span>Reps completed</span>
+            <input id="missed-reps" inputMode="numeric" value={actual} onChange={(event) => setActual(event.target.value)} />
+          </label>
+          {error && <p className="error">{error}</p>}
+        </Dialog>
       )}
-      <button type="submit" className="primary" disabled={pending}>
-        {pending ? 'Saving…' : 'Log set'}
+      {ask === 'time' && (
+        <Dialog
+          title="Didn't make the time"
+          confirmLabel="Save"
+          onConfirm={() => void saveShort()}
+          onCancel={() => setAsk(null)}
+        >
+          <label className="field">
+            <span>Seconds you managed, if you counted</span>
+            <input id="seconds-done" inputMode="numeric" value={actual} onChange={(event) => setActual(event.target.value)} />
+          </label>
+          {error && <p className="error">{error}</p>}
+        </Dialog>
+      )}
+    </section>
+  );
+
+  async function saveMiss() {
+    const reps = parseWhole(actual);
+    if (reps == null || Number.isNaN(reps) || reps > 500) {
+      setError(reps == null ? 'Enter how many reps you completed.' : 'Enter a whole number of reps.');
+      return;
+    }
+    setAsk(null);
+    await save({ reps, workSec: null, made: false });
+  }
+
+  async function saveShort() {
+    const seconds = parseWhole(actual);
+    if (Number.isNaN(seconds) || (seconds != null && seconds > 3600)) {
+      setError('Enter the seconds as a whole number.');
+      return;
+    }
+    setAsk(null);
+    await save({ reps: null, workSec: seconds && seconds > 0 ? seconds : null, made: false });
+  }
+}
+
+function MoreActions({ onExit, onFinish, onDiscard }: { onExit: () => void; onFinish: () => void; onDiscard: () => void }) {
+  return (
+    <div className="stack">
+      <button type="button" className="secondary" onClick={onExit}>
+        Save and exit
       </button>
-    </form>
+      <button type="button" className="ghost" onClick={onFinish}>
+        Finish workout
+      </button>
+      <button type="button" className="ghost" onClick={onDiscard}>
+        Discard workout
+      </button>
+    </div>
   );
 }
 
@@ -334,25 +407,6 @@ function parseWhole(raw: string): number | null {
   if (!text) return null;
   if (!/^\d+$/.test(text)) return Number.NaN;
   return Number(text);
-}
-
-function WorkTimer({ seconds }: { seconds: number }) {
-  const timer = useCountdown(seconds);
-  return (
-    <div className={timer.flash ? 'timer flash' : 'timer'}>
-      <p className="eyebrow">Work</p>
-      <p className="timer-num">{timer.display}</p>
-      <BeepRow timer={timer} />
-      {timer.done && <p>Time's up. Log the set.</p>}
-      {!timer.running && !timer.done && (
-        <button type="button" className="primary" onClick={timer.start}>
-          Start timer
-        </button>
-      )}
-      {timer.running && !timer.beeping && <p>Going</p>}
-      <p className="muted">{audioArmed() ? 'Beeps are armed.' : 'Tap Start to arm the beeps.'}</p>
-    </div>
-  );
 }
 
 function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: string; onDone: () => void | Promise<void> }) {
@@ -393,7 +447,6 @@ function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: strin
           </button>
         )}
         {timer.running && !timer.beeping && <p>Going</p>}
-        <p className="muted">{audioArmed() ? 'Beeps are armed.' : 'Tap Start to arm the beeps.'}</p>
       </div>
       <button type="button" className="secondary" onClick={go}>
         Skip rest

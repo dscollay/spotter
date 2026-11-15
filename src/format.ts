@@ -1,4 +1,4 @@
-import type { Exercise, Flag, Session, SetLog, Unit } from './types';
+import type { Exercise, Flag, SetLog, Unit } from './types';
 import { FLAG_LABELS, PROFILE_NAMES } from './types';
 
 export function profileName(id: string): string {
@@ -75,24 +75,25 @@ export function exerciseUnit(exercise: Exercise): Unit {
   return exercise.unit ?? 'kg';
 }
 
+export function repTarget(reps: string): { label: string; count: number } | null {
+  const nums = [...reps.matchAll(/\d+/g)].map((match) => Number(match[0]));
+  if (nums.length === 0) return null;
+  if (nums.length === 1) return { label: `${nums[0]} of ${nums[0]}`, count: nums[0] };
+  return { label: reps, count: nums[nums.length - 1] };
+}
+
 export function formatSetSummary(set: SetLog): string {
   let main = 'Logged';
   if (set.load != null && set.reps != null) main = `${formatNumber(set.load)} ${set.unit} × ${set.reps}`;
   else if (set.load != null) main = `${formatNumber(set.load)} ${set.unit}`;
   else if (set.reps != null) main = `${set.reps} reps`;
   if (set.workSec != null) main = main === 'Logged' ? `${set.workSec}s` : `${main} · ${set.workSec}s`;
+  if (set.made === false) main = set.reps != null ? `${main} · missed` : main === 'Logged' ? 'Short' : `${main} · short`;
   return main;
 }
 
 export function formatFlag(flag: Flag | null): string {
   return flag ? FLAG_LABELS[flag] : '';
-}
-
-export function formatLastWhen(session: Session, set: SetLog): string {
-  const started = new Date(session.startedAt);
-  const sameDay = !Number.isNaN(started.getTime()) && started.toDateString() === new Date().toDateString();
-  const when = sameDay ? 'Today' : formatWhen(session.startedAt);
-  return `${when} · ${session.dayName} · round ${set.round}`;
 }
 
 export function formatCheckIn(checkIn: { sleep: number; energy: number; soreness: number }): string {

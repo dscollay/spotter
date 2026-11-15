@@ -40,6 +40,7 @@ function parseSet(value: unknown, path: string, errors: string[]): SetLog | null
   const reps = value.reps == null ? null : typeof value.reps === 'number' ? value.reps : undefined;
   const workSec = value.workSec == null ? null : typeof value.workSec === 'number' ? value.workSec : undefined;
   const flag = value.flag == null ? null : isFlag(value.flag) ? value.flag : undefined;
+  const made = !('made' in value) || value.made == null ? undefined : value.made === true || value.made === false ? value.made : 'bad';
   const note = typeof value.note === 'string' ? value.note : null;
   const loggedAt = isIso(value.loggedAt) ? value.loggedAt : null;
   if (
@@ -61,6 +62,7 @@ function parseSet(value: unknown, path: string, errors: string[]): SetLog | null
     (reps != null && (!Number.isInteger(reps) || reps < 0)) ||
     note == null ||
     flag === undefined ||
+    made === 'bad' ||
     workSec === undefined ||
     (workSec != null && (!Number.isInteger(workSec) || workSec <= 0)) ||
     !loggedAt
@@ -68,7 +70,7 @@ function parseSet(value: unknown, path: string, errors: string[]): SetLog | null
     errors.push(`${path} is missing a load, reps, time, or other set field.`);
     return null;
   }
-  return {
+  const parsed: SetLog = {
     id,
     circuitIndex,
     circuitLabel: value.circuitLabel,
@@ -83,6 +85,8 @@ function parseSet(value: unknown, path: string, errors: string[]): SetLog | null
     workSec,
     loggedAt,
   };
+  if (made === true || made === false) parsed.made = made;
+  return parsed;
 }
 
 function parseCheckIn(value: unknown, path: string, errors: string[]): CheckIn | null {

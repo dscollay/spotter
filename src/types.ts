@@ -79,6 +79,8 @@ export type SetLog = {
   note: string;
   flag: Flag | null;
   workSec: number | null;
+  /** Present on sets logged after v1. Older logs omit it. */
+  made?: boolean;
   loggedAt: string;
 };
 

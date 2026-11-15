@@ -69,6 +69,12 @@ Days rotate in order: day 1, day 2, then day 1 again. A circuit is its exercises
 
 Import from the Program tab by file or paste. The `profile` field chooses whose program it replaces. Old sessions stay in History.
 
+## Programs from the coach
+
+`programs/dan.json`, `programs/bonnie.json`, and `programs/audrey.json` are deployed with the site. When the phone is online, Spotter fetches each person's file. If the program name or the content has changed, that file becomes the active program and the session history stays. If the phone is offline or the fetch fails, the program already stored stays. The service worker loads `programs/` from the network and does not cache those files, so a reload cannot apply an old copy.
+
+Coach Bot adds a program by opening a pull request that replaces that person's JSON file. Use the same shape as Program import. The files in the repo are placeholders until that pull request lands. A manual import still works; the next successful online fetch installs the committed file if it differs.
+
 ## Backup
 
 Data → Export backup downloads a JSON file of every profile. Import can merge (add workouts that are not already here, and keep a program that is already on the device) or replace (delete this device's log, then load the file). Confirm either one.
