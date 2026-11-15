@@ -17,7 +17,10 @@ export function Dialog({
 }) {
   const cancelRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    cancelRef.current?.focus();
+    const dialog = cancelRef.current?.closest('.dialog');
+    const field = dialog?.querySelector('input, textarea');
+    if (field instanceof HTMLElement) field.focus();
+    else cancelRef.current?.focus();
   }, []);
   return (
     <div className="backdrop">

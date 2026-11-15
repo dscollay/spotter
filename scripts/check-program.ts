@@ -120,6 +120,20 @@ const backup = parseBackup({
   ],
 });
 assert.equal(backup.ok, true, backup.ok ? '' : backup.errors.join('\n'));
+if (backup.ok) assert.equal(backup.value.sessions[0].sets[0].made, undefined);
+const withResult = structuredClone(backup.ok ? backup.value : null);
+if (withResult) {
+  withResult.sessions[0].sets[0].made = false;
+  const reread = parseBackup(withResult);
+  assert.equal(reread.ok, true, reread.ok ? '' : reread.errors.join('\n'));
+  if (reread.ok) assert.equal(reread.value.sessions[0].sets[0].made, false);
+}
+const badResult = structuredClone(backup.ok ? backup.value : null);
+if (badResult) {
+  badResult.sessions[0].sets[0].made = 'nope';
+  const rejected = parseBackup(badResult);
+  assert.equal(rejected.ok, false);
+}
 
 const notBackup = parseBackup({ profile: 'bonnie', days: [] });
 assert.equal(notBackup.ok, false);

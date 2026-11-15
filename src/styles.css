@@ -404,6 +404,54 @@ textarea { min-height: 140px; resize: vertical; }
 
 .dock { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 
+.workout-top { margin: 2px 0 20px; font-weight: 700; }
+
+.focus h1 { font-size: 2.4rem; margin: 4px 0 8px; }
+
+.where {
+  margin: 0;
+  color: var(--sage-dark);
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+
+.cue { margin: 0 0 8px; color: var(--muted); }
+
+.last-line { margin: 8px 0 22px; font-size: 1.08rem; }
+
+.weight input {
+  min-height: 76px;
+  font-size: 2rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.tick { min-height: 84px; font-size: 1.7rem; margin-top: 6px; }
+
+.quiet {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  min-height: 52px;
+  width: 100%;
+  font-weight: 700;
+}
+
+.more { margin-top: 8px; }
+
+.more summary {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.more .flags,
+.more .stack,
+.more a { margin-top: 10px; }
+
 .preview { margin: 8px 0 0; padding-left: 1.1rem; }
 
 .preview li { margin: 4px 0; }
