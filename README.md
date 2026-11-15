@@ -77,23 +77,16 @@ The app asks the browser for persistent storage. It shows the last backup date a
 
 ## Deploy
 
-The build output is `dist/`. Upload that directory to any static host.
+The site is [https://dscollay.github.io/spotter/](https://dscollay.github.io/spotter/). A push to `main` runs `.github/workflows/pages.yml`: it builds with `VITE_BASE=/spotter/` and publishes `dist/` with `actions/upload-pages-artifact` and `actions/deploy-pages`. In the repository settings, Pages source is GitHub Actions.
 
-```bash
-npm run build
-```
-
-Cloudflare Pages: build command `npm run build`, output directory `dist`. Paths are relative, so the site can live at the root or in a subpath.
-
-For a subpath, set the base and build again:
+`npm run build` without `VITE_BASE` keeps relative paths (`./`) for a host that serves the site at the domain root. To preview the Pages build locally:
 
 ```bash
 VITE_BASE=/spotter/ npm run build
+VITE_BASE=/spotter/ npm run preview
 ```
 
-`VITE_BASE` must start and end with `/`, except the default `./`.
-
-`public/_headers` asks Cloudflare Pages not to cache `sw.js` or `index.html` forever. Hashed files under `assets/` can be cached for a long time.
+Open `http://localhost:4173/spotter/`.
 
 Add the installed page to the home screen from iOS Safari (Share → Add to Home Screen) or Android Chrome (Install app). The service worker caches the app shell so a loaded install still opens offline. The workout log itself is in IndexedDB, not in the cache.
 
