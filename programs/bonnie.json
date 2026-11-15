@@ -1,82 +1,149 @@
 {
   "profile": "bonnie",
-  "program_name": "placeholder - replace with coach program",
+  "program_name": "Bonnie Block 2 - Strong and Steady",
   "start_date": "2026-11-16",
   "sessions_before_new_program": 18,
+  "progression_rule": "All sets are 45 s of work. When you get through all 3 rounds with good form and it feels like about 7 out of 10 for two sessions of the same day in a row, go up one step next time: dumbbells +1 kg each hand, kettlebell +2 kg, cable one plate (about 2.5 kg). Bodyweight moves get harder instead: press-ups on a lower bench, a lighter band for chin-ups, sit-ups with the bench one notch steeper. If a set feels like 9 out of 10 or you can't make the 45 s, stay where you are. Sessions 16-18: easier week, 2 rounds instead of 3. Poor sleep, a big work day or feeling run down: do 2 rounds and keep the weights. Right knee: do the full warm-up and go a little lighter on the first round; it should settle. If it doesn't settle, or you get sharp pain, swap the leg move and see a GP or physio. Cardio (treadmill, bike or walk, about 30 min on off days) gets logged separately.",
   "days": [
     {
-      "name": "day 1",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day A - Lunge, Press, Sit-up, Row",
+      "warmup": "3 min easy bike or treadmill. 10 glute bridges, 10 bodyweight box squats, 8 slow reverse lunges each leg with no weight, 10 Y raises lying face down (no weight).",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 2,
-          "rest_between_rounds_sec": 8,
+          "label": "A",
+          "rounds": 3,
+          "rest_between_rounds_sec": 180,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder squat",
-              "sets": 2,
-              "reps": "8",
-              "work_sec": null,
-              "load": "bodyweight",
+              "slot": "A1",
+              "name": "Dumbbell reverse lunge",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 3,
               "unit": "kg",
-              "rpe": 6,
-              "tempo": "3010",
-              "rest_sec": 8,
-              "notes": "Placeholder cue only. Not a real prescription."
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=dumbbell+reverse+lunge+exercise+technique",
+              "notes": "Alternate legs. Step back long, back knee toward the floor, push up through the front heel."
             },
             {
-              "slot": "a2",
-              "name": "placeholder hold",
-              "sets": 2,
+              "slot": "A2",
+              "name": "Bench-elevated press-up",
+              "sets": 3,
               "reps": null,
-              "work_sec": 8,
-              "load": "bodyweight",
+              "work_sec": 45,
+              "load": 0,
               "unit": "kg",
-              "rest_sec": 8,
-              "video_url": "https://example.com/placeholder-video",
-              "notes": "Timed placeholder so the countdown can be tried."
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=incline+push+up+bench+exercise+technique",
+              "notes": "Body in one line, chest to the bench edge. Lower the bench when it gets easy."
+            },
+            {
+              "slot": "A3",
+              "name": "Incline-bench sit-up",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=decline+bench+sit+up+exercise+technique",
+              "notes": "Slow on the way down. Arms crossed, or hold a light plate when it's easy."
+            },
+            {
+              "slot": "A4",
+              "name": "Standing one-arm cable row",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 10,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=standing+one+arm+cable+row+exercise+technique",
+              "notes": "About 22 s each arm. Stand tall, pull the elbow back past the ribs."
             }
           ]
         }
       ]
     },
     {
-      "name": "day 2",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day B - Hinge, Pull, Squat, Posture",
+      "warmup": "3 min easy bike or treadmill. 10 glute bridges, 10 hip hinges with hands on hips, 10 bodyweight box squats, 20 s dead hang.",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 2,
-          "rest_between_rounds_sec": 8,
+          "label": "A",
+          "rounds": 3,
+          "rest_between_rounds_sec": 180,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder squat",
-              "sets": 2,
-              "reps": "8",
-              "work_sec": null,
+              "slot": "A1",
+              "name": "Kettlebell deadlift",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 12,
               "unit": "kg",
-              "rest_sec": 8,
-              "notes": "Same placeholder name as day 1 so a previous log can show."
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=kettlebell+deadlift+exercise+technique",
+              "notes": "Hips back, flat back, stand tall and squeeze the glutes at the top."
             },
             {
-              "slot": "a2",
-              "name": "placeholder press",
-              "sets": 2,
-              "reps": "8",
-              "work_sec": null,
-              "unit": "lb",
-              "rest_sec": 8,
-              "notes": "Placeholder only. Log the load in pounds."
+              "slot": "A2",
+              "name": "Band-assisted chin-up",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
+              "notes": "Bar with a band, or feet on the floor. Slow on the way down. Rest at the top or bottom as needed within the 45 s."
+            },
+            {
+              "slot": "A3",
+              "name": "Goblet squat to bench",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 8,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=goblet+box+squat+exercise+technique",
+              "notes": "Hold the kettlebell at the chest, sit back to touch the bench, stand tall. The big leg move for this day."
+            },
+            {
+              "slot": "A4",
+              "name": "Cable rope face pull (both ropes)",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 45,
+              "load": 7.5,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": null,
+              "rest_sec": 15,
+              "video_url": "https://www.youtube.com/results?search_query=cable+rope+face+pull+exercise+technique",
+              "notes": "Pull to the eyebrows, thumbs back, squeeze the shoulder blades. Posture work."
             }
           ]
         }
       ]
     }
-  ],
-  "progression_rule": "Placeholder. The coach replaces this text with the real progression rule."
+  ]
 }

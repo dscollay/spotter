@@ -1,67 +1,149 @@
 {
   "profile": "audrey",
-  "program_name": "placeholder - replace with coach program",
+  "program_name": "Audrey Level 1 - Pre-season Starter",
   "start_date": "2026-11-16",
-  "sessions_before_new_program": 18,
+  "sessions_before_new_program": 12,
+  "progression_rule": "This is a starter level. Technique comes first. When every rep looks clean for two sessions of the same day in a row, add 2 reps or 5 seconds to that move. Nothing heavier than the listed kettlebell until Coach Bot reviews. Aim for 2-3 sessions a week, about 25 minutes, with at least a day between. Skip it in a heavy soccer week or if you're tired or unwell. Anything that hurts in a sharp way: stop and tell Mum or Dad. After 12 sessions, level up: Coach Bot writes Level 2 from your logs.",
   "days": [
     {
-      "name": "day 1",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day 1 - Bounce and Grip",
+      "warmup": "Play first: 3 min of skipping, tag, or ball taps. Then 10 bodyweight squats, 10 walking lunges, 10 arm circles each way.",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 2,
-          "rest_between_rounds_sec": 8,
+          "label": "A",
+          "rounds": 3,
+          "rest_between_rounds_sec": 90,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder step",
-              "sets": 2,
-              "reps": "6",
-              "work_sec": null,
+              "slot": "A1",
+              "name": "Pogo hops",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 20,
+              "load": 0,
               "unit": "kg",
-              "rest_sec": 8,
-              "notes": "Placeholder only. Not a real prescription."
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=pogo+hops+exercise+technique",
+              "notes": "Quick, quiet, springy hops on the balls of your feet. Stiff ankles, soft knees."
             },
             {
-              "slot": "a2",
-              "name": "placeholder hang",
-              "sets": 2,
-              "reps": null,
-              "work_sec": 8,
+              "slot": "A2",
+              "name": "Bodyweight box squat",
+              "sets": 3,
+              "reps": 8,
+              "work_sec": null,
+              "load": 0,
               "unit": "kg",
-              "rest_sec": 8,
-              "notes": "Timed placeholder only."
+              "rpe": 6,
+              "tempo": "3 s down",
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=box+squat+bodyweight+exercise+technique",
+              "notes": "Sit back to the bench, chest up, knees track over toes, stand tall."
+            },
+            {
+              "slot": "A3",
+              "name": "Dead hang",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 30,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 45,
+              "video_url": "https://www.youtube.com/results?search_query=dead+hang+exercise+technique",
+              "notes": "You've done 60 s already, so this is easy on purpose. Shoulders pulled down away from your ears."
+            },
+            {
+              "slot": "A4",
+              "name": "Kettlebell suitcase carry",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 20,
+              "load": 8,
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=kettlebell+suitcase+carry+exercise+technique",
+              "notes": "20 s each hand. Walk tall, don't lean toward the bell."
             }
           ]
         }
       ]
     },
     {
-      "name": "day 2",
-      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "name": "Day 2 - Brake and Battle",
+      "warmup": "Play first: 3 min of mirror drill or shuffle tag. Then 10 glute bridges, 6 inchworms, 10 side shuffles each way.",
       "deload": false,
       "circuits": [
         {
-          "label": "a",
-          "rounds": 1,
-          "rest_between_rounds_sec": 0,
+          "label": "A",
+          "rounds": 3,
+          "rest_between_rounds_sec": 90,
           "exercises": [
             {
-              "slot": "a1",
-              "name": "placeholder step",
-              "sets": 1,
-              "reps": "6",
+              "slot": "A1",
+              "name": "Lateral bound and stick",
+              "sets": 3,
+              "reps": 5,
               "work_sec": null,
+              "load": 0,
               "unit": "kg",
-              "rest_sec": 8,
-              "notes": "Placeholder only."
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=lateral+bound+stick+landing+exercise+technique",
+              "notes": "5 each side. Jump sideways off one leg, land on the other and freeze for 2 s, like braking to defend."
+            },
+            {
+              "slot": "A2",
+              "name": "Bodyweight reverse lunge",
+              "sets": 3,
+              "reps": 6,
+              "work_sec": null,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=reverse+lunge+bodyweight+exercise+technique",
+              "notes": "6 each leg. Step back long, stay balanced, front knee over the foot."
+            },
+            {
+              "slot": "A3",
+              "name": "Incline press-up",
+              "sets": 3,
+              "reps": 8,
+              "work_sec": null,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=incline+push+up+bench+exercise+technique",
+              "notes": "Hands on the bench, body straight like a plank."
+            },
+            {
+              "slot": "A4",
+              "name": "Side plank",
+              "sets": 3,
+              "reps": null,
+              "work_sec": 20,
+              "load": 0,
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": null,
+              "rest_sec": 30,
+              "video_url": "https://www.youtube.com/results?search_query=side+plank+exercise+technique",
+              "notes": "20 s each side. Strong sides help you hold your ground in a shoulder charge."
             }
           ]
         }
       ]
     }
-  ],
-  "progression_rule": "Placeholder. The coach replaces this text with the real progression rule."
+  ]
 }
