@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseBackup } from '../src/backup.ts';
+import { prescriptionLine } from '../src/format.ts';
 import { buildSteps, nextDayIndex, parseProgram } from '../src/program.ts';
 import type { Program, Session } from '../src/types.ts';
 
@@ -68,7 +69,12 @@ if (numericResult.ok) {
   const exercise = numericResult.value.days[0].circuits[0].exercises[0];
   assert.equal(exercise.reps, '8');
   assert.equal(exercise.load, '12.5');
+  assert.equal(prescriptionLine(exercise), '2 sets · 8 reps · 12.5 kg · RPE 6 · tempo 3010');
 }
+
+const labeled = programs.get('bonnie')?.days[0].circuits[0].exercises[0];
+assert.ok(labeled);
+assert.equal(prescriptionLine(labeled), '2 sets · 8 reps · bodyweight · RPE 6 · tempo 3010');
 
 const zeroLoad = structuredClone(readJson('bonnie')) as {
   days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
@@ -79,18 +85,21 @@ const zeroLoadResult = parseProgram(zeroLoad);
 assert.equal(zeroLoadResult.ok, true, zeroLoadResult.ok ? '' : zeroLoadResult.errors.join('\n'));
 if (zeroLoadResult.ok) assert.equal(zeroLoadResult.value.days[0].circuits[0].exercises[0].load, '0');
 
-const badNumber = structuredClone(readJson('bonnie')) as {
+const badReps = structuredClone(readJson('bonnie')) as {
   days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
 };
-badNumber.days[0].circuits[0].exercises[0].reps = true;
-badNumber.days[0].circuits[0].exercises[0].load = Number.POSITIVE_INFINITY;
-const badNumberResult = parseProgram(badNumber);
-assert.equal(badNumberResult.ok, false);
-if (!badNumberResult.ok) {
-  const text = badNumberResult.errors.join('\n');
-  assert.match(text, /reps must be a string/);
-  assert.match(text, /load must be a string/);
-}
+badReps.days[0].circuits[0].exercises[0].reps = true;
+const badRepsResult = parseProgram(badReps);
+assert.equal(badRepsResult.ok, false);
+if (!badRepsResult.ok) assert.match(badRepsResult.errors.join('\n'), /reps must be a string/);
+
+const badLoad = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+badLoad.days[0].circuits[0].exercises[0].load = Number.POSITIVE_INFINITY;
+const badLoadResult = parseProgram(badLoad);
+assert.equal(badLoadResult.ok, false);
+if (!badLoadResult.ok) assert.match(badLoadResult.errors.join('\n'), /load must be a string/);
 
 const bonnieProgram = programs.get('bonnie');
 assert.ok(bonnieProgram);

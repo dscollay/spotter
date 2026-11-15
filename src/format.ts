@@ -61,11 +61,17 @@ export function formatElapsed(seconds: number): string {
   return `${minutes}:${String(remain).padStart(2, '0')}`;
 }
 
+function prescribedLoad(exercise: Exercise): string {
+  const load = exercise.load ?? '';
+  if (!/^-?\d+(?:\.\d+)?$/.test(load)) return load;
+  return `${formatNumber(Number(load))} ${exerciseUnit(exercise)}`;
+}
+
 export function prescriptionLine(exercise: Exercise): string {
   const bits = [`${exercise.sets} ${exercise.sets === 1 ? 'set' : 'sets'}`];
   if (exercise.work_sec != null) bits.push(`${exercise.work_sec} sec`);
   else if (exercise.reps) bits.push(`${exercise.reps} reps`);
-  if (exercise.load) bits.push(exercise.load);
+  if (exercise.load) bits.push(prescribedLoad(exercise));
   if (exercise.rpe != null) bits.push(`RPE ${formatNumber(exercise.rpe)}`);
   if (exercise.tempo) bits.push(`tempo ${exercise.tempo}`);
   return bits.join(' · ');
