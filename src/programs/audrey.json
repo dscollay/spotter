@@ -1,0 +1,67 @@
+{
+  "profile": "audrey",
+  "program_name": "placeholder - replace with coach program",
+  "start_date": "2026-11-16",
+  "sessions_before_new_program": 18,
+  "days": [
+    {
+      "name": "day 1",
+      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "deload": false,
+      "circuits": [
+        {
+          "label": "a",
+          "rounds": 2,
+          "rest_between_rounds_sec": 8,
+          "exercises": [
+            {
+              "slot": "a1",
+              "name": "placeholder step",
+              "sets": 2,
+              "reps": "6",
+              "work_sec": null,
+              "unit": "kg",
+              "rest_sec": 8,
+              "notes": "Placeholder only. Not a real prescription."
+            },
+            {
+              "slot": "a2",
+              "name": "placeholder hang",
+              "sets": 2,
+              "reps": null,
+              "work_sec": 8,
+              "unit": "kg",
+              "rest_sec": 8,
+              "notes": "Timed placeholder only."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "day 2",
+      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "deload": false,
+      "circuits": [
+        {
+          "label": "a",
+          "rounds": 1,
+          "rest_between_rounds_sec": 0,
+          "exercises": [
+            {
+              "slot": "a1",
+              "name": "placeholder step",
+              "sets": 1,
+              "reps": "6",
+              "work_sec": null,
+              "unit": "kg",
+              "rest_sec": 8,
+              "notes": "Placeholder only."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "progression_rule": "Placeholder. The coach replaces this text with the real progression rule."
+}
