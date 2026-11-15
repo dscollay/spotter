@@ -1,0 +1,38 @@
+{
+  "profile": "bonnie",
+  "program_name": "placeholder - imported program",
+  "start_date": "2026-11-16",
+  "sessions_before_new_program": 18,
+  "extra_field": "ignored on purpose",
+  "days": [
+    {
+      "name": "day 1",
+      "warmup": "Imported placeholder warmup.",
+      "deload": false,
+      "circuits": [
+        {
+          "label": "a",
+          "rounds": 1,
+          "rest_between_rounds_sec": 30,
+          "exercises": [
+            {
+              "slot": "a1",
+              "name": "imported placeholder squat",
+              "sets": 1,
+              "reps": "5",
+              "work_sec": null,
+              "load": "10 kg",
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": "3010",
+              "rest_sec": 20,
+              "notes": "Imported cue. Not a real prescription.",
+              "coach_only": "ignore me"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "progression_rule": "Imported placeholder rule."
+}

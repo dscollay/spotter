@@ -1,0 +1,82 @@
+{
+  "profile": "bonnie",
+  "program_name": "placeholder - replace with coach program",
+  "start_date": "2026-11-16",
+  "sessions_before_new_program": 18,
+  "days": [
+    {
+      "name": "day 1",
+      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "deload": false,
+      "circuits": [
+        {
+          "label": "a",
+          "rounds": 2,
+          "rest_between_rounds_sec": 8,
+          "exercises": [
+            {
+              "slot": "a1",
+              "name": "placeholder squat",
+              "sets": 2,
+              "reps": "8",
+              "work_sec": null,
+              "load": "bodyweight",
+              "unit": "kg",
+              "rpe": 6,
+              "tempo": "3010",
+              "rest_sec": 8,
+              "notes": "Placeholder cue only. Not a real prescription."
+            },
+            {
+              "slot": "a2",
+              "name": "placeholder hold",
+              "sets": 2,
+              "reps": null,
+              "work_sec": 8,
+              "load": "bodyweight",
+              "unit": "kg",
+              "rest_sec": 8,
+              "video_url": "https://example.com/placeholder-video",
+              "notes": "Timed placeholder so the countdown can be tried."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "day 2",
+      "warmup": "Placeholder warmup. Replace this program before real training.",
+      "deload": false,
+      "circuits": [
+        {
+          "label": "a",
+          "rounds": 2,
+          "rest_between_rounds_sec": 8,
+          "exercises": [
+            {
+              "slot": "a1",
+              "name": "placeholder squat",
+              "sets": 2,
+              "reps": "8",
+              "work_sec": null,
+              "unit": "kg",
+              "rest_sec": 8,
+              "notes": "Same placeholder name as day 1 so a previous log can show."
+            },
+            {
+              "slot": "a2",
+              "name": "placeholder press",
+              "sets": 2,
+              "reps": "8",
+              "work_sec": null,
+              "unit": "lb",
+              "rest_sec": 8,
+              "notes": "Placeholder only. Log the load in pounds."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "progression_rule": "Placeholder. The coach replaces this text with the real progression rule."
+}
