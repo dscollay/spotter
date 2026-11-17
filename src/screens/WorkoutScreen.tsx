@@ -195,10 +195,11 @@ function SetLogger({
 }) {
   const exercise = step.exercise;
   const previous = latestSet(sessions, exercise.name);
+  const unit = exerciseUnit(exercise);
   const timed = exercise.work_sec != null;
   const target = exercise.reps ? repTarget(exercise.reps) : null;
   const tickLabel = exercise.per_side && exercise.reps ? `${exercise.reps} each side` : (target?.label ?? exercise.reps);
-  const [load, setLoad] = useState(previous?.set.load != null ? formatNumber(previous.set.load) : '');
+  const [load, setLoad] = useState(() => initialLoad(exercise, previous, unit));
   const [note, setNote] = useState('');
   const [flag, setFlag] = useState<Flag | null>(null);
   const [error, setError] = useState('');
@@ -231,7 +232,13 @@ function SetLogger({
     }
   }
 
-  const unit = exerciseUnit(exercise);
+  function adjustLoad(delta: number) {
+    const current = parseDecimal(load);
+    const base = current == null || Number.isNaN(current) ? 0 : current;
+    const next = Math.round((base + delta) * 1000) / 1000;
+    setLoad(formatNumber(Math.max(0, next)));
+  }
+
   return (
     <section className="focus">
       <p className="where">
@@ -251,6 +258,16 @@ function SetLogger({
         <span>Weight ({unit})</span>
         <input id="load" inputMode="decimal" autoComplete="off" value={load} onChange={(event) => setLoad(event.target.value)} />
       </label>
+      {unit === 'lb' && (
+        <div className="choice">
+          <button type="button" className="secondary" onClick={() => adjustLoad(-5)}>
+            −5 lb
+          </button>
+          <button type="button" className="secondary" onClick={() => adjustLoad(5)}>
+            +5 lb
+          </button>
+        </div>
+      )}
       <label className="field">
         <span>Note</span>
         <input id="note" maxLength={280} value={note} onChange={(event) => setNote(event.target.value)} />
@@ -395,6 +412,12 @@ function MoreActions({ onExit, onFinish, onDiscard }: { onExit: () => void; onFi
       </button>
     </div>
   );
+}
+
+function initialLoad(exercise: ExerciseStep['exercise'], previous: { set: SetLog } | null, unit: SetLog['unit']): string {
+  if (previous?.set.load != null && previous.set.unit === unit) return formatNumber(previous.set.load);
+  if (unit === 'lb' && exercise.load && /^-?\d+(?:\.\d+)?$/.test(exercise.load)) return formatNumber(Number(exercise.load));
+  return '';
 }
 
 function parseDecimal(raw: string): number | null {
