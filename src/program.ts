@@ -154,6 +154,7 @@ function parseExercise(value: unknown, path: string, errors: string[]): Exercise
   const tempo = optString(obj, 'tempo', path, errors);
   const rest = optInt(obj, 'rest_sec', path, errors, 0);
   const notes = optString(obj, 'notes', path, errors);
+  const perSide = optBool(obj, 'per_side', path, errors);
   if (load) exercise.load = load;
   if (unit) exercise.unit = unit;
   if (rpe != null) exercise.rpe = rpe;
@@ -161,6 +162,7 @@ function parseExercise(value: unknown, path: string, errors: string[]): Exercise
   if (rest != null) exercise.rest_sec = rest;
   if (video && /^https?:\/\//i.test(video)) exercise.video_url = video;
   if (notes) exercise.notes = notes;
+  if (perSide) exercise.per_side = true;
   return exercise;
 }
 

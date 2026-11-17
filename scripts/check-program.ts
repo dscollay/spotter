@@ -74,7 +74,56 @@ if (numericResult.ok) {
 
 const labeled = programs.get('bonnie')?.days[0].circuits[0].exercises[0];
 assert.ok(labeled);
+assert.equal(labeled.per_side, undefined);
 assert.equal(prescriptionLine(labeled), '2 sets · 8 reps · bodyweight · RPE 6 · tempo 3010');
+
+const sided = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+sided.days[0].circuits[0].exercises[0].per_side = true;
+const sidedResult = parseProgram(sided);
+assert.equal(sidedResult.ok, true, sidedResult.ok ? '' : sidedResult.errors.join('\n'));
+if (sidedResult.ok) {
+  const exercise = sidedResult.value.days[0].circuits[0].exercises[0];
+  assert.equal(exercise.per_side, true);
+  assert.equal(prescriptionLine(exercise), '2 sets · 8 each side · bodyweight · RPE 6 · tempo 3010');
+}
+
+const badSide = structuredClone(readJson('bonnie')) as {
+  days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
+};
+badSide.days[0].circuits[0].exercises[0].per_side = 'yes';
+const badSideResult = parseProgram(badSide);
+assert.equal(badSideResult.ok, false);
+if (!badSideResult.ok) assert.match(badSideResult.errors.join('\n'), /true or false/);
+
+for (const person of people) {
+  const file = JSON.parse(readFileSync(new URL(`../programs/${person}.json`, import.meta.url), 'utf8')) as unknown;
+  const parsed = parseProgram(file);
+  assert.equal(parsed.ok, true, parsed.ok ? '' : `${person}: ${parsed.errors.join('\n')}`);
+}
+const shippedBonnie = parseProgram(JSON.parse(readFileSync(new URL('../programs/bonnie.json', import.meta.url), 'utf8')));
+assert.equal(shippedBonnie.ok, true);
+if (shippedBonnie.ok) {
+  const lunge = shippedBonnie.value.days[0].circuits[0].exercises[0];
+  const hinge = shippedBonnie.value.days[1].circuits[0].exercises[0];
+  assert.equal(lunge.name, 'Dumbbell reverse lunge');
+  assert.equal(lunge.per_side, true);
+  assert.equal(lunge.work_sec, 45);
+  assert.equal(hinge.name, 'Dumbbell Romanian deadlift');
+  assert.equal(hinge.per_side, undefined);
+  assert.equal(hinge.work_sec, 45);
+}
+const shippedDan = parseProgram(JSON.parse(readFileSync(new URL('../programs/dan.json', import.meta.url), 'utf8')));
+assert.equal(shippedDan.ok, true);
+if (shippedDan.ok) {
+  const stepUp = shippedDan.value.days[1].circuits[0].exercises[0];
+  const deadlift = shippedDan.value.days[0].circuits[0].exercises[0];
+  assert.equal(stepUp.name, 'Barbell step-up');
+  assert.equal(stepUp.per_side, true);
+  assert.equal(stepUp.reps, '8');
+  assert.equal(deadlift.per_side, undefined);
+}
 
 const zeroLoad = structuredClone(readJson('bonnie')) as {
   days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
