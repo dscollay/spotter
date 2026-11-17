@@ -27,7 +27,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=pogo+hops+exercise+technique",
-              "notes": "Quick, quiet, springy hops on the balls of your feet. Stiff ankles, soft knees."
+              "notes": "Quick, quiet, springy hops on the balls of your feet. Stiff ankles, soft knees.",
+              "per_side": false
             },
             {
               "slot": "A2",
@@ -41,7 +42,8 @@
               "tempo": "3 s down",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=box+squat+bodyweight+exercise+technique",
-              "notes": "Sit back to the bench, chest up, knees track over toes, stand tall."
+              "notes": "Sit back to the bench, chest up, knees track over toes, stand tall.",
+              "per_side": false
             },
             {
               "slot": "A3",
@@ -55,7 +57,8 @@
               "tempo": null,
               "rest_sec": 45,
               "video_url": "https://www.youtube.com/results?search_query=dead+hang+exercise+technique",
-              "notes": "You've done 60 s already, so this is easy on purpose. Shoulders pulled down away from your ears."
+              "notes": "You've done 60 s already, so this is easy on purpose. Shoulders pulled down away from your ears.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -69,7 +72,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=kettlebell+suitcase+carry+exercise+technique",
-              "notes": "20 s each hand. Walk tall, don't lean toward the bell."
+              "notes": "20 s each hand. Walk tall, don't lean toward the bell.",
+              "per_side": true
             }
           ]
         }
@@ -97,7 +101,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=lateral+bound+stick+landing+exercise+technique",
-              "notes": "5 each side. Jump sideways off one leg, land on the other and freeze for 2 s, like braking to defend."
+              "notes": "5 each side. Jump sideways off one leg, land on the other and freeze for 2 s, like braking to defend.",
+              "per_side": true
             },
             {
               "slot": "A2",
@@ -111,7 +116,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=reverse+lunge+bodyweight+exercise+technique",
-              "notes": "6 each leg. Step back long, stay balanced, front knee over the foot."
+              "notes": "6 each leg. Step back long, stay balanced, front knee over the foot.",
+              "per_side": true
             },
             {
               "slot": "A3",
@@ -125,7 +131,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=incline+push+up+bench+exercise+technique",
-              "notes": "Hands on the bench, body straight like a plank."
+              "notes": "Hands on the bench, body straight like a plank.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -139,7 +146,8 @@
               "tempo": null,
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=side+plank+exercise+technique",
-              "notes": "20 s each side. Strong sides help you hold your ground in a shoulder charge."
+              "notes": "20 s each side. Strong sides help you hold your ground in a shoulder charge.",
+              "per_side": true
             }
           ]
         }

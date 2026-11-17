@@ -27,7 +27,8 @@
               "tempo": "controlled down, reset each rep",
               "rest_sec": 60,
               "video_url": "https://www.youtube.com/results?search_query=Barbell+deadlift+exercise+technique",
-              "notes": "Brace before each pull, bar close to the shins. Last diary best 120x5, so start well under."
+              "notes": "Brace before each pull, bar close to the shins. Last diary best 120x5, so start well under.",
+              "per_side": false
             },
             {
               "slot": "A2",
@@ -41,7 +42,8 @@
               "tempo": "3 s lower",
               "rest_sec": 45,
               "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
-              "notes": "Use the band that lets you get 4 clean reps. Full hang at the bottom, chin over the bar."
+              "notes": "Use the band that lets you get 4 clean reps. Full hang at the bottom, chin over the bar.",
+              "per_side": false
             },
             {
               "slot": "A3",
@@ -55,7 +57,8 @@
               "tempo": "1 s pause on chest",
               "rest_sec": 60,
               "video_url": "https://www.youtube.com/results?search_query=Barbell+bench+press+exercise+technique",
-              "notes": "Shoulder blades pinned, feet planted. Diary best 75x5."
+              "notes": "Shoulder blades pinned, feet planted. Diary best 75x5.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -69,7 +72,8 @@
               "tempo": "1 s squeeze",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=cable+rope+face+pull+exercise+technique",
-              "notes": "Pull to the eyebrows, thumbs back. Posture work for the desk days."
+              "notes": "Pull to the eyebrows, thumbs back. Posture work for the desk days.",
+              "per_side": false
             }
           ]
         }
@@ -97,7 +101,8 @@
               "tempo": "drive through the top foot",
               "rest_sec": 60,
               "video_url": "https://www.youtube.com/results?search_query=barbell+step+up+exercise+technique",
-              "notes": "8 each leg. Knee-height box. Diary best 60x8. Replaces back squat for now."
+              "notes": "8 each leg. Knee-height box. Diary best 60x8. Replaces back squat for now.",
+              "per_side": true
             },
             {
               "slot": "A2",
@@ -111,7 +116,8 @@
               "tempo": "1 s squeeze at the top",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=one+arm+dumbbell+row+exercise+technique",
-              "notes": "8 each arm, hand on bench. Diary best about 41.5x5."
+              "notes": "8 each arm, hand on bench. Diary best about 41.5x5.",
+              "per_side": true
             },
             {
               "slot": "A3",
@@ -125,7 +131,8 @@
               "tempo": "2 s down",
               "rest_sec": 60,
               "video_url": "https://www.youtube.com/results?search_query=parallel+bar+dip+exercise+technique",
-              "notes": "Bodyweight only. Go down until upper arms are parallel, no deeper. Stop if the shoulder complains."
+              "notes": "Bodyweight only. Go down until upper arms are parallel, no deeper. Stop if the shoulder complains.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -139,7 +146,8 @@
               "tempo": "2 s hold out front",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=cable+pallof+press+exercise+technique",
-              "notes": "10 each side. Ribs down, don't let the cable turn you."
+              "notes": "10 each side. Ribs down, don't let the cable turn you.",
+              "per_side": true
             }
           ]
         }

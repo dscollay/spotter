@@ -27,7 +27,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=dumbbell+reverse+lunge+exercise+technique",
-              "notes": "Alternate legs. Step back long, back knee toward the floor, push up through the front heel."
+              "notes": "45 s each leg: do all of one leg, then all of the other. Step back long, back knee toward the floor, push up through the front heel.",
+              "per_side": true
             },
             {
               "slot": "A2",
@@ -41,7 +42,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=incline+push+up+bench+exercise+technique",
-              "notes": "Body in one line, chest to the bench edge. Lower the bench when it gets easy."
+              "notes": "Body in one line, chest to the bench edge. Lower the bench when it gets easy.",
+              "per_side": false
             },
             {
               "slot": "A3",
@@ -55,7 +57,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=decline+bench+sit+up+exercise+technique",
-              "notes": "Slow on the way down. Arms crossed, or hold a light plate when it's easy."
+              "notes": "Slow on the way down. Arms crossed, or hold a light plate when it's easy.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -69,7 +72,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=standing+one+arm+cable+row+exercise+technique",
-              "notes": "About 22 s each arm. Stand tall, pull the elbow back past the ribs."
+              "notes": "45 s each arm. Stand tall, pull the elbow back past the ribs.",
+              "per_side": true
             }
           ]
         }
@@ -87,17 +91,18 @@
           "exercises": [
             {
               "slot": "A1",
-              "name": "Kettlebell deadlift",
+              "name": "Dumbbell Romanian deadlift",
               "sets": 3,
               "reps": null,
               "work_sec": 45,
-              "load": 12,
+              "load": 6,
               "unit": "kg",
               "rpe": 7,
               "tempo": null,
               "rest_sec": 15,
-              "video_url": "https://www.youtube.com/results?search_query=kettlebell+deadlift+exercise+technique",
-              "notes": "Hips back, flat back, stand tall and squeeze the glutes at the top."
+              "video_url": "https://www.youtube.com/results?search_query=dumbbell+romanian+deadlift+exercise+technique",
+              "notes": "6 kg in each hand (12 kg total). Soft knees, push the hips back and slide the dumbbells down the thighs until you feel the hamstrings, flat back, then stand tall and squeeze the glutes.",
+              "per_side": false
             },
             {
               "slot": "A2",
@@ -111,7 +116,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
-              "notes": "Bar with a band, or feet on the floor. Slow on the way down. Rest at the top or bottom as needed within the 45 s."
+              "notes": "Bar with a band, or feet on the floor. Slow on the way down. Rest at the top or bottom as needed within the 45 s.",
+              "per_side": false
             },
             {
               "slot": "A3",
@@ -125,7 +131,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=goblet+box+squat+exercise+technique",
-              "notes": "Hold the kettlebell at the chest, sit back to touch the bench, stand tall. The big leg move for this day."
+              "notes": "Hold the kettlebell at the chest, sit back to touch the bench, stand tall. The big leg move for this day.",
+              "per_side": false
             },
             {
               "slot": "A4",
@@ -139,7 +146,8 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=cable+rope+face+pull+exercise+technique",
-              "notes": "Pull to the eyebrows, thumbs back, squeeze the shoulder blades. Posture work."
+              "notes": "Pull to the eyebrows, thumbs back, squeeze the shoulder blades. Posture work.",
+              "per_side": false
             }
           ]
         }
