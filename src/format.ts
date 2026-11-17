@@ -70,7 +70,7 @@ function prescribedLoad(exercise: Exercise): string {
 export function prescriptionLine(exercise: Exercise): string {
   const bits = [`${exercise.sets} ${exercise.sets === 1 ? 'set' : 'sets'}`];
   if (exercise.work_sec != null) bits.push(`${exercise.work_sec} sec`);
-  else if (exercise.reps) bits.push(`${exercise.reps} reps`);
+  else if (exercise.reps) bits.push(exercise.per_side ? `${exercise.reps} each side` : `${exercise.reps} reps`);
   if (exercise.load) bits.push(prescribedLoad(exercise));
   if (exercise.rpe != null) bits.push(`RPE ${formatNumber(exercise.rpe)}`);
   if (exercise.tempo) bits.push(`tempo ${exercise.tempo}`);

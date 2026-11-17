@@ -197,6 +197,7 @@ function SetLogger({
   const previous = latestSet(sessions, exercise.name);
   const timed = exercise.work_sec != null;
   const target = exercise.reps ? repTarget(exercise.reps) : null;
+  const tickLabel = exercise.per_side && exercise.reps ? `${exercise.reps} each side` : (target?.label ?? exercise.reps);
   const [load, setLoad] = useState(previous?.set.load != null ? formatNumber(previous.set.load) : '');
   const [note, setNote] = useState('');
   const [flag, setFlag] = useState<Flag | null>(null);
@@ -204,7 +205,7 @@ function SetLogger({
   const [pending, setPending] = useState(false);
   const [ask, setAsk] = useState<'reps' | 'time' | null>(null);
   const [actual, setActual] = useState('');
-  const timer = useCountdown(exercise.work_sec ?? 0);
+  const timer = useCountdown(exercise.work_sec ?? 0, Boolean(exercise.per_side));
 
   async function save(values: Omit<LogDraft, 'load' | 'note' | 'flag'> & { load?: number | null }) {
     if (pending) return;
@@ -242,6 +243,7 @@ function SetLogger({
       {timed && exercise.work_sec != null && (
         <div className={timer.flash ? 'timer flash' : 'timer'}>
           <p className="timer-num">{timer.display}</p>
+          {timer.label && <p>{timer.label}</p>}
           <BeepRow timer={timer} />
         </div>
       )}
@@ -295,7 +297,7 @@ function SetLogger({
             disabled={pending || !target}
             onClick={() => void save({ reps: target?.count ?? null, workSec: null, made: true })}
           >
-            {target?.label ?? exercise.reps}
+            {tickLabel}
           </button>
           <button
             type="button"
@@ -470,6 +472,7 @@ function BeepRow({ timer }: { timer: Countdown }) {
 
 type Countdown = {
   display: number;
+  label: string;
   running: boolean;
   done: boolean;
   flash: boolean;
@@ -477,12 +480,18 @@ type Countdown = {
   start: () => void;
 };
 
-function useCountdown(seconds: number): Countdown {
-  const [left, setLeft] = useState(seconds * 1000);
+const SIDE_GAP_SEC = 5;
+
+function useCountdown(seconds: number, perSide = false): Countdown {
+  const plan = useRef(perSide ? [seconds, SIDE_GAP_SEC, seconds] : [seconds]);
+  const labels = useRef(perSide ? ['', 'switch sides', ''] : ['']);
+  const index = useRef(0);
+  const [left, setLeft] = useState(plan.current[0] * 1000);
+  const [label, setLabel] = useState(labels.current[0]);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [flash, setFlash] = useState(false);
-  const leftRef = useRef(seconds * 1000);
+  const leftRef = useRef(plan.current[0] * 1000);
   const endRef = useRef(0);
   const beeped = useRef<Set<number>>(new Set());
 
@@ -505,6 +514,17 @@ function useCountdown(seconds: number): Countdown {
           beep(520, 0.28);
           setFlash(true);
         }
+        const next = index.current + 1;
+        if (next < plan.current.length) {
+          index.current = next;
+          const nextMs = plan.current[next] * 1000;
+          beeped.current = new Set();
+          leftRef.current = nextMs;
+          endRef.current = Date.now() + nextMs;
+          setLeft(nextMs);
+          setLabel(labels.current[next]);
+          return;
+        }
         setRunning(false);
         setDone(true);
       }
@@ -515,6 +535,7 @@ function useCountdown(seconds: number): Countdown {
   const display = Math.ceil(left / 1000);
   return {
     display,
+    label,
     running,
     done,
     flash,

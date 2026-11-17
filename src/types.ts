@@ -35,6 +35,8 @@ export type Exercise = {
   rest_sec?: number;
   video_url?: string;
   notes?: string;
+  /** Missing or false means one timed block or one rep target, as before. */
+  per_side?: boolean;
 };
 
 export type Circuit = {
