@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseBackup } from '../src/backup.ts';
 import { prescriptionLine } from '../src/format.ts';
-import { buildSteps, nextDayIndex, parseProgram } from '../src/program.ts';
+import { buildSteps, latestSet, nextDayIndex, parseProgram } from '../src/program.ts';
 import type { Program, Session } from '../src/types.ts';
 
 function readJson(name: string): unknown {
@@ -117,13 +117,50 @@ if (shippedBonnie.ok) {
 const shippedDan = parseProgram(JSON.parse(readFileSync(new URL('../programs/dan.json', import.meta.url), 'utf8')));
 assert.equal(shippedDan.ok, true);
 if (shippedDan.ok) {
+  const dayA = shippedDan.value.days[0];
   const stepUp = shippedDan.value.days[1].circuits[0].exercises[0];
-  const deadlift = shippedDan.value.days[0].circuits[0].exercises[0];
+  const deadlift = dayA.circuits[0].exercises[0];
+  const facePull = dayA.circuits[0].exercises[3];
+  assert.equal(dayA.circuits.length, 1);
+  assert.equal(dayA.circuits[0].rounds, 4);
+  assert.equal(dayA.circuits[0].rest_between_rounds_sec, 120);
   assert.equal(stepUp.name, 'Barbell step-up');
   assert.equal(stepUp.per_side, true);
   assert.equal(stepUp.reps, '8');
-  assert.equal(deadlift.per_side, undefined);
+  assert.equal(deadlift.name, 'Barbell deadlift');
+  assert.equal(prescriptionLine(deadlift).includes('95 kg'), true);
+  assert.equal(facePull.name, 'Cable rope face pull');
+  assert.equal(facePull.unit, 'lb');
+  assert.equal(prescriptionLine(facePull).includes('35 lb'), true);
+  assert.equal(prescriptionLine(facePull).includes('kg'), false);
+  const steps = buildSteps(dayA);
+  const slots = steps.filter((step) => step.kind === 'exercise').map((step) => step.exercise.slot);
+  assert.deepEqual(slots, ['A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4']);
+  const rests = steps.filter((step) => step.kind === 'rest');
+  assert.equal(rests[0].kind === 'rest' && rests[0].seconds === 60 && rests[0].reason, 'Rest after A1');
+  assert.equal(rests[1].kind === 'rest' && rests[1].seconds, 45);
+  assert.equal(rests[2].kind === 'rest' && rests[2].seconds, 45);
+  assert.equal(rests[3].kind === 'rest' && rests[3].seconds === 120 && rests[3].reason, 'Rest before round 2');
+  assert.equal(steps.at(-1)?.kind, 'exercise');
 }
+if (shippedBonnie.ok) {
+  const row = shippedBonnie.value.days[0].circuits[0].exercises[3];
+  assert.equal(row.name, 'Standing one-arm cable row');
+  assert.equal(row.unit, 'lb');
+  assert.equal(prescriptionLine(row).includes('20 lb'), true);
+}
+
+const history = [
+  {
+    sets: [
+      { exerciseName: 'Barbell bench press', slot: 'A3', load: 62.5, unit: 'kg', loggedAt: '2026-11-16T08:20:00.000Z' },
+      { exerciseName: 'Barbell deadlift', slot: 'A3', load: 100, unit: 'kg', loggedAt: '2026-11-16T08:10:00.000Z' },
+    ],
+  },
+] as Session[];
+assert.equal(latestSet(history, 'Dumbbell bench press'), null);
+assert.equal(latestSet(history, 'Barbell deadlift')?.set.load, 100);
+assert.equal(latestSet(history, 'Barbell deadlift')?.set.unit, 'kg');
 
 const zeroLoad = structuredClone(readJson('bonnie')) as {
   days: { circuits: { exercises: Record<string, unknown>[] }[] }[];

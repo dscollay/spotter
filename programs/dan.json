@@ -3,17 +3,17 @@
   "program_name": "Dan Block 1 - Restart Strength",
   "start_date": "2026-11-16",
   "sessions_before_new_program": 18,
-  "progression_rule": "Main lifts (deadlift, bench, step-up): when every set is done with clean form at RPE 8 or easier, add weight next time: deadlift +5 kg, bench and step-up +2.5 kg, row +2.5 kg. If you miss reps, repeat the weight. Miss twice in a row, drop 10% and build back. Chin-ups: add 1 rep per set up to 4x6, then switch to a lighter band and go back to 4x3. Dips: add 1 rep per set up to 3x10 before any added load. Sessions 16-18 are a deload: 2 rounds only, same weights, finish early. Busy-week minimum: 2 rounds of A1 and A3 only (about 20 min). Back after 7+ days off (illness, travel, moving): use 80% of your last weights for 2 sessions, then carry on. Strength is weekdays 5:30-6:30; cardio is separate (weekend or a spare morning) and gets logged as cardio, not here. Sharp pain, numbness or a niggle that isn't settling: stop that lift and see a GP or physio.",
+  "progression_rule": "Main lifts (deadlift, dumbbell bench, step-up): when every set is done with clean form at RPE 8 or easier, add weight next time: deadlift +5 kg, step-up +2.5 kg, dumbbell bench +2.5 kg per dumbbell, row +2.5 kg. If you miss reps, repeat the weight. Miss twice in a row, drop 10% and build back. Chin-ups: add 1 rep per set up to 4x6, then switch to a lighter band and go back to 4x3. Dips: add 1 rep per set up to 3x10 before any added load. Sessions 16-18 are a deload: 2 rounds only, same weights, finish early. Busy-week minimum: 2 rounds of the deadlift and the dumbbell bench only (about 20 min). Back after 7+ days off (illness, travel, moving): use 80% of your last weights for 2 sessions, then carry on. Strength is weekdays 5:30-6:30; cardio is separate (weekend or a spare morning) and gets logged as cardio, not here. Sharp pain, numbness or a niggle that isn't settling: stop that lift and see a GP or physio.",
   "days": [
     {
-      "name": "Day A - Deadlift, Bench, Chin",
-      "warmup": "5 min easy bike. 10 glute bridges, 10 bodyweight box squats, 10 band pull-aparts, 30 s dead hang. Then 2-3 lighter ramp-up sets on deadlift and bench (bar, ~50%, ~75%).",
+      "name": "Day A - Deadlift, DB Bench, Chin, Face Pull",
+      "warmup": "5 min easy bike. 10 glute bridges, 10 bodyweight box squats, 10 band pull-aparts, 30 s dead hang. Then deadlift ramp-up sets (bar, ~50%, ~75%) and 1 light set of dumbbell bench.",
       "deload": false,
       "circuits": [
         {
           "label": "A",
           "rounds": 4,
-          "rest_between_rounds_sec": 90,
+          "rest_between_rounds_sec": 120,
           "exercises": [
             {
               "slot": "A1",
@@ -27,11 +27,26 @@
               "tempo": "controlled down, reset each rep",
               "rest_sec": 60,
               "video_url": "https://www.youtube.com/results?search_query=Barbell+deadlift+exercise+technique",
-              "notes": "Brace before each pull, bar close to the shins. Last diary best 120x5, so start well under.",
+              "notes": "Floor station away from the rack, so it doesn't block the bench or chin-up bar. Brace before each pull, bar close to the shins. Last diary best 120x5, so start well under.",
               "per_side": false
             },
             {
               "slot": "A2",
+              "name": "Dumbbell bench press",
+              "sets": 4,
+              "reps": 5,
+              "work_sec": null,
+              "load": 25,
+              "unit": "kg",
+              "rpe": 7,
+              "tempo": "1 s pause at the bottom",
+              "rest_sec": 45,
+              "video_url": "https://www.youtube.com/results?search_query=dumbbell+bench+press+exercise+technique",
+              "notes": "25 kg in each hand to start (about the same effort as the 62.5 kg barbell). Shoulder blades pinned, elbows about 45 degrees from your sides. Bench set up away from the rack so the chin-up bar stays clear.",
+              "per_side": false
+            },
+            {
+              "slot": "A3",
               "name": "Band-assisted chin-up",
               "sets": 4,
               "reps": 4,
@@ -42,22 +57,7 @@
               "tempo": "3 s lower",
               "rest_sec": 45,
               "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
-              "notes": "Use the band that lets you get 4 clean reps. Full hang at the bottom, chin over the bar.",
-              "per_side": false
-            },
-            {
-              "slot": "A3",
-              "name": "Barbell bench press",
-              "sets": 4,
-              "reps": 5,
-              "work_sec": null,
-              "load": 62.5,
-              "unit": "kg",
-              "rpe": 7,
-              "tempo": "1 s pause on chest",
-              "rest_sec": 60,
-              "video_url": "https://www.youtube.com/results?search_query=Barbell+bench+press+exercise+technique",
-              "notes": "Shoulder blades pinned, feet planted. Diary best 75x5.",
+              "notes": "Band-assisted, as you've been doing them. Use the band that gives 4 clean reps. Full hang at the bottom, chin over the bar.",
               "per_side": false
             },
             {
@@ -66,13 +66,13 @@
               "sets": 4,
               "reps": 12,
               "work_sec": null,
-              "load": 15,
-              "unit": "kg",
+              "load": 35,
+              "unit": "lb",
               "rpe": 7,
               "tempo": "1 s squeeze",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=cable+rope+face+pull+exercise+technique",
-              "notes": "Pull to the eyebrows, thumbs back. Posture work for the desk days.",
+              "notes": "Pull to the eyebrows, thumbs back. Posture work for the desk days. Paramount stack is in pounds.",
               "per_side": false
             }
           ]
@@ -140,13 +140,13 @@
               "sets": 4,
               "reps": 10,
               "work_sec": null,
-              "load": 10,
-              "unit": "kg",
+              "load": 20,
+              "unit": "lb",
               "rpe": 7,
               "tempo": "2 s hold out front",
               "rest_sec": 30,
               "video_url": "https://www.youtube.com/results?search_query=cable+pallof+press+exercise+technique",
-              "notes": "10 each side. Ribs down, don't let the cable turn you.",
+              "notes": "10 each side. Ribs down, don't let the cable turn you. Paramount stack is in pounds.",
               "per_side": true
             }
           ]
