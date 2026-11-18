@@ -120,8 +120,10 @@ if (shippedDan.ok) {
   const dayA = shippedDan.value.days[0];
   const stepUp = shippedDan.value.days[1].circuits[0].exercises[0];
   const deadlift = dayA.circuits[0].exercises[0];
-  const facePull = dayA.circuits[1].exercises[2];
-  assert.equal(dayA.circuits.length, 2);
+  const facePull = dayA.circuits[0].exercises[3];
+  assert.equal(dayA.circuits.length, 1);
+  assert.equal(dayA.circuits[0].rounds, 4);
+  assert.equal(dayA.circuits[0].rest_between_rounds_sec, 120);
   assert.equal(stepUp.name, 'Barbell step-up');
   assert.equal(stepUp.per_side, true);
   assert.equal(stepUp.reps, '8');
@@ -133,11 +135,13 @@ if (shippedDan.ok) {
   assert.equal(prescriptionLine(facePull).includes('kg'), false);
   const steps = buildSteps(dayA);
   const slots = steps.filter((step) => step.kind === 'exercise').map((step) => step.exercise.slot);
-  assert.deepEqual(slots, ['A1', 'A1', 'A1', 'A1', 'B1', 'B2', 'B3', 'B1', 'B2', 'B3', 'B1', 'B2', 'B3', 'B1', 'B2', 'B3']);
+  assert.deepEqual(slots, ['A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4', 'A1', 'A2', 'A3', 'A4']);
   const rests = steps.filter((step) => step.kind === 'rest');
-  assert.equal(rests[0].kind === 'rest' && rests[0].seconds, 120);
-  assert.equal(rests[3].kind === 'rest' && rests[3].reason, 'Rest after B1');
-  assert.equal(rests[5].kind === 'rest' && rests[5].seconds, 90);
+  assert.equal(rests[0].kind === 'rest' && rests[0].seconds === 60 && rests[0].reason, 'Rest after A1');
+  assert.equal(rests[1].kind === 'rest' && rests[1].seconds, 45);
+  assert.equal(rests[2].kind === 'rest' && rests[2].seconds, 45);
+  assert.equal(rests[3].kind === 'rest' && rests[3].seconds === 120 && rests[3].reason, 'Rest before round 2');
+  assert.equal(steps.at(-1)?.kind, 'exercise');
 }
 if (shippedBonnie.ok) {
   const row = shippedBonnie.value.days[0].circuits[0].exercises[3];
