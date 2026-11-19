@@ -35,7 +35,10 @@ export function HomeScreen({
   const [coachNote, setCoachNote] = useState('');
   return (
     <>
-      <p className="wordmark">Spotter</p>
+      <p className="wordmark brand">
+        <img className="brand-mark" src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={36} height={36} />
+        Spotter
+      </p>
       <div className="profile-row">
         <h1>{name}</h1>
         <button type="button" className="secondary compact" onClick={onSwitch}>

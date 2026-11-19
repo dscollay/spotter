@@ -88,36 +88,57 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function isFreshShell(request, url) {
+  if (request.mode === 'navigate') return true;
+  const path = url.pathname;
+  return (
+    path.endsWith('/index.html') ||
+    path.endsWith('.webmanifest') ||
+    path.endsWith('/favicon.png') ||
+    path.includes('/icons/')
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith('/sw.js')) return;
   if (url.pathname.split('/').includes('programs') && url.pathname.endsWith('.json')) {
     // Network only. A cached program file would replace a newer one already on the phone.
     event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
-  event.respondWith(
-    (async () => {
-      const cached = await caches.match(event.request);
-      if (cached) return cached;
-      try {
-        const response = await fetch(event.request);
-        if (response.ok) {
-          const cache = await caches.open(CACHE);
-          cache.put(event.request, response.clone());
-        }
-        return response;
-      } catch (error) {
-        if (event.request.mode === 'navigate') {
-          const fallback = (await caches.match('./index.html')) || (await caches.match('./'));
-          if (fallback) return fallback;
-        }
-        throw error;
-      }
-    })(),
-  );
+  if (isFreshShell(event.request, url)) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+  event.respondWith(cacheFirst(event.request));
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE);
+  try {
+    const response = await fetch(request, { cache: 'no-store' });
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    const cached = (await caches.match(request)) || (request.mode === 'navigate' ? await caches.match('./index.html') : undefined);
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await caches.open(CACHE);
+    cache.put(request, response.clone());
+  }
+  return response;
+}
 `;
       writeFileSync(join(dist, 'sw.js'), source);
     },

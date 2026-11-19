@@ -61,6 +61,18 @@ button:disabled { opacity: 0.45; cursor: default; }
   color: var(--sage-dark);
 }
 
+.wordmark.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
 .lede, .muted { color: var(--muted); }
 
 .lede { margin-top: 8px; font-size: 1.05rem; }
