@@ -15,6 +15,16 @@ function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function release(db: IDBDatabase) {
+  if (current !== db) return;
+  current = null;
+  opening = null;
+}
+
+function closing(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'InvalidStateError';
+}
+
 function open(): Promise<IDBDatabase> {
   if (current) return Promise.resolve(current);
   if (!opening) {
@@ -32,13 +42,14 @@ function open(): Promise<IDBDatabase> {
         if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'id' });
       };
       request.onsuccess = () => {
-        current = request.result;
-        current.onversionchange = () => {
-          current?.close();
-          current = null;
-          opening = null;
+        const db = request.result;
+        db.onversionchange = () => {
+          release(db);
+          db.close();
         };
-        resolve(current);
+        db.onclose = () => release(db);
+        current = db;
+        resolve(db);
       };
       request.onerror = () => {
         opening = null;
@@ -47,6 +58,23 @@ function open(): Promise<IDBDatabase> {
     });
   }
   return opening;
+}
+
+async function access(storeNames: string | string[], mode: IDBTransactionMode): Promise<IDBTransaction> {
+  const db = await open();
+  try {
+    return db.transaction(storeNames, mode);
+  } catch (error) {
+    if (!closing(error)) throw error;
+    release(db);
+    try {
+      db.close();
+    } catch {
+      // Safari already started closing this connection.
+    }
+    const again = await open();
+    return again.transaction(storeNames, mode);
+  }
 }
 
 function finish(transaction: IDBTransaction, action: string): Promise<void> {
@@ -58,9 +86,8 @@ function finish(transaction: IDBTransaction, action: string): Promise<void> {
 }
 
 async function read<T>(storeName: string, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  const db = await open();
+  const transaction = await access(storeName, 'readonly');
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readonly');
     const request = fn(transaction.objectStore(storeName));
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('Could not read the log.'));
@@ -73,8 +100,7 @@ export async function getMeta(key: string): Promise<unknown> {
 }
 
 export async function setMeta(key: string, value: unknown): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction('meta', 'readwrite');
+  const transaction = await access('meta', 'readwrite');
   transaction.objectStore('meta').put(clone(value), key);
   await finish(transaction, 'save');
 }
@@ -86,8 +112,7 @@ export async function getActiveProfile(): Promise<ProfileId | null> {
 
 export async function setActiveProfile(profile: ProfileId | null): Promise<void> {
   if (profile == null) {
-    const db = await open();
-    const transaction = db.transaction('meta', 'readwrite');
+    const transaction = await access('meta', 'readwrite');
     transaction.objectStore('meta').delete('activeProfile');
     await finish(transaction, 'save');
     return;
@@ -144,8 +169,7 @@ export async function getProgram(profile: ProfileId): Promise<Program | null> {
 }
 
 export async function putProgram(program: Program): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction('programs', 'readwrite');
+  const transaction = await access('programs', 'readwrite');
   transaction.objectStore('programs').put(clone(program), program.profile);
   await finish(transaction, 'save the program');
 }
@@ -166,15 +190,13 @@ export async function listSessions(profile?: ProfileId): Promise<Session[]> {
 }
 
 export async function putSession(session: Session): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction('sessions', 'readwrite');
+  const transaction = await access('sessions', 'readwrite');
   transaction.objectStore('sessions').put(clone(session));
   await finish(transaction, 'save the set');
 }
 
 export async function deleteSession(id: string): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction('sessions', 'readwrite');
+  const transaction = await access('sessions', 'readwrite');
   transaction.objectStore('sessions').delete(id);
   await finish(transaction, 'delete the workout');
 }
@@ -195,8 +217,7 @@ export async function ensureSeeded(): Promise<void> {
 }
 
 export async function wipeAll(): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction(['meta', 'programs', 'sessions'], 'readwrite');
+  const transaction = await access(['meta', 'programs', 'sessions'], 'readwrite');
   transaction.objectStore('meta').clear();
   transaction.objectStore('programs').clear();
   transaction.objectStore('sessions').clear();
@@ -210,8 +231,7 @@ export async function replaceAll(input: {
   activeProfile: ProfileId | null;
   lastBackupAt: string;
 }): Promise<void> {
-  const db = await open();
-  const transaction = db.transaction(['meta', 'programs', 'sessions'], 'readwrite');
+  const transaction = await access(['meta', 'programs', 'sessions'], 'readwrite');
   const meta = transaction.objectStore('meta');
   const programs = transaction.objectStore('programs');
   const sessions = transaction.objectStore('sessions');
