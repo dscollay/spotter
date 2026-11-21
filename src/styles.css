@@ -104,6 +104,8 @@ h3 { font-size: 1.15rem; }
   margin: 12px 0;
 }
 
+.next-up { margin: 10px 0 0; }
+
 .eyebrow {
   margin: 0 0 6px;
   color: var(--sage-dark);

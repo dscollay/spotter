@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { beep, unlockAudio } from '../audio';
-import { exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatNumber, formatSetSummary, repTarget } from '../format';
-import { buildSteps, circuitsDone, latestSet, type ExerciseStep } from '../program';
-import type { Flag, Session, SetLog } from '../types';
+import { exerciseTarget, exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatNumber, formatSetSummary, repTarget } from '../format';
+import { buildSteps, circuitsDone, latestSet, nextExercise, type ExerciseStep } from '../program';
+import type { Exercise, Flag, Session, SetLog } from '../types';
 import { FLAG_LABELS, FLAGS } from '../types';
 import { armKeepAwake, releaseKeepAwake, type WakeStatus } from '../wake';
 import { Dialog } from '../ui';
@@ -138,7 +138,13 @@ export function WorkoutScreen({
       )}
       {step?.kind === 'rest' && (
         <>
-          <RestTimer key={session.stepIndex} seconds={step.seconds} reason={step.reason} onDone={() => advance()} />
+          <RestTimer
+            key={session.stepIndex}
+            seconds={step.seconds}
+            reason={step.reason}
+            next={nextExercise(steps, session.stepIndex)}
+            onDone={() => advance()}
+          />
           <MoreActions onExit={onExit} onFinish={() => setConfirm('finish')} onDiscard={() => setConfirm('discard')} />
         </>
       )}
@@ -434,7 +440,17 @@ function parseWhole(raw: string): number | null {
   return Number(text);
 }
 
-function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: string; onDone: () => void | Promise<void> }) {
+function RestTimer({
+  seconds,
+  reason,
+  next,
+  onDone,
+}: {
+  seconds: number;
+  reason: string;
+  next: Exercise | null;
+  onDone: () => void | Promise<void>;
+}) {
   const timer = useCountdown(seconds);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
@@ -462,6 +478,12 @@ function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: strin
     <section className="card">
       <p className="eyebrow">Rest</p>
       <h2>{reason}</h2>
+      {next && (
+        <p className="muted next-up">
+          Next exercise · {next.name}
+          {exerciseTarget(next) ? ` · ${exerciseTarget(next)}` : ''}
+        </p>
+      )}
       <div className={timer.flash ? 'timer flash' : 'timer'}>
         <p className="timer-num">{timer.display}</p>
         <BeepRow timer={timer} />

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseBackup } from '../src/backup.ts';
-import { prescriptionLine } from '../src/format.ts';
-import { buildSteps, latestSet, nextDayIndex, parseProgram } from '../src/program.ts';
+import { exerciseTarget, prescriptionLine } from '../src/format.ts';
+import { buildSteps, latestSet, nextDayIndex, nextExercise, parseProgram } from '../src/program.ts';
 import type { Program, Session } from '../src/types.ts';
 
 function readJson(name: string): unknown {
@@ -142,6 +142,18 @@ if (shippedDan.ok) {
   assert.equal(rests[2].kind === 'rest' && rests[2].seconds, 45);
   assert.equal(rests[3].kind === 'rest' && rests[3].seconds === 120 && rests[3].reason, 'Rest before round 2');
   assert.equal(steps.at(-1)?.kind, 'exercise');
+  const afterDeadlift = steps.findIndex((step) => step.kind === 'rest');
+  const bench = nextExercise(steps, afterDeadlift);
+  assert.equal(bench?.name, 'Dumbbell bench press');
+  assert.equal(exerciseTarget(bench!), '5 reps · 25 kg');
+  const beforeRound2 = steps.findIndex((step) => step.kind === 'rest' && step.reason === 'Rest before round 2');
+  assert.equal(nextExercise(steps, beforeRound2)?.name, 'Barbell deadlift');
+  assert.equal(exerciseTarget(nextExercise(steps, beforeRound2)!), '5 reps · 95 kg');
+  const facePullRest = steps.findIndex((step) => step.kind === 'rest' && step.reason === 'Rest after A3');
+  assert.equal(nextExercise(steps, facePullRest)?.name, 'Cable rope face pull');
+  assert.equal(exerciseTarget(nextExercise(steps, facePullRest)!), '12 reps · 35 lb');
+  assert.equal(exerciseTarget(stepUp), '8 each side · 50 kg');
+  assert.equal(nextExercise(steps, steps.length - 1), null);
 }
 if (shippedBonnie.ok) {
   const dayA = shippedBonnie.value.days[0];
@@ -155,6 +167,12 @@ if (shippedBonnie.ok) {
   assert.equal(row.unit, 'lb');
   assert.equal(prescriptionLine(row).includes('15 lb'), true);
   assert.equal(prescriptionLine(dayA.circuits[0].exercises[0]).includes('4 kg'), true);
+  const bonnieSteps = buildSteps(dayA);
+  const afterLunge = bonnieSteps.findIndex((step) => step.kind === 'rest');
+  const press = nextExercise(bonnieSteps, afterLunge);
+  assert.equal(press?.name, 'Bench-elevated press-up');
+  assert.equal(exerciseTarget(press!), '45 sec · 0 kg');
+  assert.equal(nextExercise(bonnieSteps, bonnieSteps.length - 1), null);
 }
 
 const history = [

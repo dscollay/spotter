@@ -302,6 +302,14 @@ export function buildSteps(day: Day): Step[] {
   return steps;
 }
 
+export function nextExercise(steps: Step[], fromIndex: number): Exercise | null {
+  for (let i = fromIndex + 1; i < steps.length; i += 1) {
+    const step = steps[i];
+    if (step.kind === 'exercise') return step.exercise;
+  }
+  return null;
+}
+
 export function programStamp(program: Program): string {
   let hash = 0x811c9dc5;
   const text = JSON.stringify(program);

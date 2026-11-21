@@ -67,11 +67,18 @@ function prescribedLoad(exercise: Exercise): string {
   return `${formatNumber(Number(load))} ${exerciseUnit(exercise)}`;
 }
 
-export function prescriptionLine(exercise: Exercise): string {
-  const bits = [`${exercise.sets} ${exercise.sets === 1 ? 'set' : 'sets'}`];
+export function exerciseTarget(exercise: Exercise): string {
+  const bits: string[] = [];
   if (exercise.work_sec != null) bits.push(`${exercise.work_sec} sec`);
   else if (exercise.reps) bits.push(exercise.per_side ? `${exercise.reps} each side` : `${exercise.reps} reps`);
   if (exercise.load) bits.push(prescribedLoad(exercise));
+  return bits.join(' · ');
+}
+
+export function prescriptionLine(exercise: Exercise): string {
+  const bits = [`${exercise.sets} ${exercise.sets === 1 ? 'set' : 'sets'}`];
+  const target = exerciseTarget(exercise);
+  if (target) bits.push(target);
   if (exercise.rpe != null) bits.push(`RPE ${formatNumber(exercise.rpe)}`);
   if (exercise.tempo) bits.push(`tempo ${exercise.tempo}`);
   return bits.join(' · ');
