@@ -6,7 +6,7 @@
   "progression_rule": "All sets are 45 s of work. When you get through all 3 rounds with good form and it feels like about 7 out of 10 for two sessions of the same day in a row, go up one step next time: dumbbells +1 kg each hand, kettlebell +2 kg, cable +5 lb. Bodyweight moves get harder instead: press-ups on a lower bench, a lighter band for chin-ups, sit-ups with the bench one notch steeper. If a set feels like 9 out of 10 or you can't make the 45 s, stay where you are. Sessions 16-18: easier week, 2 rounds instead of 3. Poor sleep, a big work day or feeling run down: do 2 rounds and keep the weights. Right knee: do the full warm-up and go a little lighter on the first round; it should settle. If it doesn't settle, or you get sharp pain, swap the leg move and see a GP or physio. Cardio (treadmill, bike or walk, about 30 min on off days) gets logged separately.",
   "days": [
     {
-      "name": "Day A - Lunge, Press, Sit-up, Row",
+      "name": "Day A - Lunge, Press, Bridge, Row",
       "warmup": "3 min easy bike or treadmill. 10 glute bridges, 10 bodyweight box squats, 8 slow reverse lunges each leg with no weight, 10 Y raises lying face down (no weight).",
       "deload": false,
       "circuits": [
@@ -21,7 +21,7 @@
               "sets": 3,
               "reps": null,
               "work_sec": 45,
-              "load": 3,
+              "load": 4,
               "unit": "kg",
               "rpe": 7,
               "tempo": null,
@@ -47,17 +47,17 @@
             },
             {
               "slot": "A3",
-              "name": "Incline-bench sit-up",
+              "name": "Glute bridge hold",
               "sets": 3,
               "reps": null,
               "work_sec": 45,
               "load": 0,
               "unit": "kg",
               "rpe": 7,
-              "tempo": null,
+              "tempo": "hold",
               "rest_sec": 15,
-              "video_url": "https://www.youtube.com/results?search_query=decline+bench+sit+up+exercise+technique",
-              "notes": "Slow on the way down. Arms crossed, or hold a light plate when it's easy.",
+              "video_url": "https://www.youtube.com/results?search_query=glute+bridge+hold+exercise+technique",
+              "notes": "On the mat. Feet flat, push through the heels, lift the hips until knees, hips and shoulders line up, squeeze the glutes and hold. Ribs down, breathe normally. Stands in for the incline sit-up while the minor ab strain settles. Coach brings sit-ups back gradually.",
               "per_side": false
             },
             {
@@ -66,7 +66,7 @@
               "sets": 3,
               "reps": null,
               "work_sec": 45,
-              "load": 20,
+              "load": 15,
               "unit": "lb",
               "rpe": 7,
               "tempo": null,
@@ -116,7 +116,7 @@
               "tempo": null,
               "rest_sec": 15,
               "video_url": "https://www.youtube.com/results?search_query=band+assisted+chin+up+exercise+technique",
-              "notes": "Bar with a band, or feet on the floor. Slow on the way down. Rest at the top or bottom as needed within the 45 s.",
+              "notes": "Start with 2 heavy bands plus the medium band. Cue: pull the elbows down to the ribs, so the back does the work, not just the arms. Slow on the way down, and rest at the top or bottom as needed within the 45 s. Once 45 s on 3 bands is solid, drop the medium band.",
               "per_side": false
             },
             {

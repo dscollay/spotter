@@ -144,10 +144,17 @@ if (shippedDan.ok) {
   assert.equal(steps.at(-1)?.kind, 'exercise');
 }
 if (shippedBonnie.ok) {
-  const row = shippedBonnie.value.days[0].circuits[0].exercises[3];
+  const dayA = shippedBonnie.value.days[0];
+  const hold = dayA.circuits[0].exercises[2];
+  const row = dayA.circuits[0].exercises[3];
+  assert.equal(dayA.name, 'Day A - Lunge, Press, Bridge, Row');
+  assert.equal(hold.name, 'Glute bridge hold');
+  assert.equal(hold.work_sec, 45);
+  assert.equal(hold.per_side, undefined);
   assert.equal(row.name, 'Standing one-arm cable row');
   assert.equal(row.unit, 'lb');
-  assert.equal(prescriptionLine(row).includes('20 lb'), true);
+  assert.equal(prescriptionLine(row).includes('15 lb'), true);
+  assert.equal(prescriptionLine(dayA.circuits[0].exercises[0]).includes('4 kg'), true);
 }
 
 const history = [
