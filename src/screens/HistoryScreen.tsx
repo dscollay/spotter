@@ -1,4 +1,4 @@
-import { formatCheckIn, formatDuration, formatFlag, formatSetSummary, formatWhen, profileName } from '../format';
+import { formatCheckIn, formatDuration, formatFlag, formatSetSummary, formatWhen, isBodyweightExercise, profileName } from '../format';
 import type { ProfileId, Session } from '../types';
 
 export function HistoryScreen({
@@ -73,7 +73,7 @@ export function SessionDetail({ session, onBack }: { session: Session; onBack: (
               <strong>
                 {set.slot.toUpperCase()} · Round {set.round} · {set.exerciseName}
               </strong>
-              <div>{formatSetSummary(set)}</div>
+              <div>{formatSetSummary(set, isBodyweightExercise(session.day, set.exerciseName))}</div>
               {set.note && <div>“{set.note}”</div>}
               {set.flag && <div>{formatFlag(set.flag)}</div>}
             </li>

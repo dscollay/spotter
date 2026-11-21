@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { beep, unlockAudio } from '../audio';
-import { exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatNumber, formatSetSummary, repTarget } from '../format';
-import { buildSteps, circuitsDone, latestSet, type ExerciseStep } from '../program';
-import type { Flag, Session, SetLog } from '../types';
+import { exerciseTarget, exerciseUnit, formatCheckIn, formatDuration, formatElapsed, formatFlag, formatLoad, formatNumber, formatSetSummary, isBodyweightExercise, isBodyweightLoad, repTarget } from '../format';
+import { buildSteps, circuitsDone, latestSet, nextExercise, type ExerciseStep } from '../program';
+import type { Exercise, Flag, Session, SetLog } from '../types';
 import { FLAG_LABELS, FLAGS } from '../types';
 import { armKeepAwake, releaseKeepAwake, type WakeStatus } from '../wake';
 import { Dialog } from '../ui';
@@ -138,7 +138,13 @@ export function WorkoutScreen({
       )}
       {step?.kind === 'rest' && (
         <>
-          <RestTimer key={session.stepIndex} seconds={step.seconds} reason={step.reason} onDone={() => advance()} />
+          <RestTimer
+            key={session.stepIndex}
+            seconds={step.seconds}
+            reason={step.reason}
+            next={nextExercise(steps, session.stepIndex)}
+            onDone={() => advance()}
+          />
           <MoreActions onExit={onExit} onFinish={() => setConfirm('finish')} onDiscard={() => setConfirm('discard')} />
         </>
       )}
@@ -196,6 +202,7 @@ function SetLogger({
   const exercise = step.exercise;
   const previous = latestSet(sessions, exercise.name);
   const unit = exerciseUnit(exercise);
+  const bodyweight = isBodyweightLoad(exercise.load);
   const timed = exercise.work_sec != null;
   const target = exercise.reps ? repTarget(exercise.reps) : null;
   const tickLabel = exercise.per_side && exercise.reps ? `${exercise.reps} each side` : (target?.label ?? exercise.reps);
@@ -239,6 +246,9 @@ function SetLogger({
     setLoad(formatNumber(Math.max(0, next)));
   }
 
+  const added = parseDecimal(load);
+  const bwShown = bodyweight ? formatLoad(added == null || Number.isNaN(added) ? null : added, unit, true) : '';
+
   return (
     <section className="focus">
       <p className="where">
@@ -246,7 +256,7 @@ function SetLogger({
       </p>
       <h1>{exercise.name}</h1>
       {exercise.notes && <p className="cue">{exercise.notes}</p>}
-      <p className="last-line">{previous ? `Last time ${formatSetSummary(previous.set)}` : 'No log yet'}</p>
+      <p className="last-line">{previous ? `Last time ${formatSetSummary(previous.set, bodyweight)}` : 'No log yet'}</p>
       {timed && exercise.work_sec != null && (
         <div className={timer.flash ? 'timer flash' : 'timer'}>
           <p className="timer-num">{timer.display}</p>
@@ -255,9 +265,10 @@ function SetLogger({
         </div>
       )}
       <label className="field weight">
-        <span>Weight ({unit})</span>
+        <span>{bodyweight ? `Added weight (${unit})` : `Weight (${unit})`}</span>
         <input id="load" inputMode="decimal" autoComplete="off" value={load} onChange={(event) => setLoad(event.target.value)} />
       </label>
+      {bwShown && <p className="muted next-up">{bwShown}</p>}
       {unit === 'lb' && (
         <div className="choice">
           <button type="button" className="secondary" onClick={() => adjustLoad(-5)}>
@@ -415,6 +426,10 @@ function MoreActions({ onExit, onFinish, onDiscard }: { onExit: () => void; onFi
 }
 
 function initialLoad(exercise: ExerciseStep['exercise'], previous: { set: SetLog } | null, unit: SetLog['unit']): string {
+  if (isBodyweightLoad(exercise.load)) {
+    if (previous?.set.load != null && previous.set.unit === unit) return formatNumber(previous.set.load);
+    return '0';
+  }
   if (previous?.set.load != null && previous.set.unit === unit) return formatNumber(previous.set.load);
   if (unit === 'lb' && exercise.load && /^-?\d+(?:\.\d+)?$/.test(exercise.load)) return formatNumber(Number(exercise.load));
   return '';
@@ -434,7 +449,17 @@ function parseWhole(raw: string): number | null {
   return Number(text);
 }
 
-function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: string; onDone: () => void | Promise<void> }) {
+function RestTimer({
+  seconds,
+  reason,
+  next,
+  onDone,
+}: {
+  seconds: number;
+  reason: string;
+  next: Exercise | null;
+  onDone: () => void | Promise<void>;
+}) {
   const timer = useCountdown(seconds);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
@@ -462,6 +487,12 @@ function RestTimer({ seconds, reason, onDone }: { seconds: number; reason: strin
     <section className="card">
       <p className="eyebrow">Rest</p>
       <h2>{reason}</h2>
+      {next && (
+        <p className="muted next-up">
+          Next exercise · {next.name}
+          {exerciseTarget(next) ? ` · ${exerciseTarget(next)}` : ''}
+        </p>
+      )}
       <div className={timer.flash ? 'timer flash' : 'timer'}>
         <p className="timer-num">{timer.display}</p>
         <BeepRow timer={timer} />
@@ -595,7 +626,7 @@ function Summary({ session, onHistory, onExit }: { session: Session; onHistory: 
               <strong>
                 {set.slot.toUpperCase()} · Round {set.round} · {set.exerciseName}
               </strong>
-              <div>{formatSetSummary(set)}</div>
+              <div>{formatSetSummary(set, isBodyweightExercise(session.day, set.exerciseName))}</div>
               {set.note && <div>“{set.note}”</div>}
               {set.flag && <div>{formatFlag(set.flag)}</div>}
             </li>

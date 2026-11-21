@@ -1,5 +1,5 @@
 import { getSummaryAt, setSummaryAt } from './db';
-import { formatCheckIn, formatNumber, formatWhen, profileName } from './format';
+import { formatCheckIn, formatLoad, formatWhen, isBodyweightExercise, profileName } from './format';
 import type { ProfileId, Session, SetLog } from './types';
 import { FLAG_LABELS } from './types';
 
@@ -13,6 +13,7 @@ export type CoachSet = {
   made: boolean | null;
   flag: SetLog['flag'];
   note: string;
+  bodyweight?: boolean;
 };
 
 export type CoachSummary = {
@@ -47,12 +48,12 @@ export function buildCoachSummary(profile: ProfileId, sessions: Session[], from:
       startedAt: session.startedAt,
       day: session.dayName,
       checkIn: session.checkIn,
-      exercises: groupSets(session.sets),
+      exercises: groupSets(session.sets, session.day),
     })),
   };
 }
 
-function groupSets(sets: SetLog[]): { name: string; sets: CoachSet[] }[] {
+function groupSets(sets: SetLog[], day: Session['day']): { name: string; sets: CoachSet[] }[] {
   const groups: { name: string; sets: CoachSet[] }[] = [];
   for (const set of sets) {
     const last = groups[groups.length - 1];
@@ -64,6 +65,7 @@ function groupSets(sets: SetLog[]): { name: string; sets: CoachSet[] }[] {
       made: set.made ?? null,
       flag: set.flag,
       note: set.note,
+      bodyweight: isBodyweightExercise(day, set.exerciseName),
     };
     if (last && last.name === set.exerciseName) last.sets.push(item);
     else groups.push({ name: set.exerciseName, sets: [item] });
@@ -85,7 +87,7 @@ export function renderCoachText(summary: CoachSummary): string {
 }
 
 function setLines(set: CoachSet): string[] {
-  const weight = set.load != null ? `${formatNumber(set.load)} ${set.unit}` : 'no weight';
+  const weight = formatLoad(set.load, set.unit, Boolean(set.bodyweight)) || 'no weight';
   let result = weight;
   if (set.reps != null && set.workSec == null) {
     const mark = set.made === false ? 'missed' : set.made === true ? 'ticked' : 'logged';
