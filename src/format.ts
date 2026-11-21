@@ -1,4 +1,4 @@
-import type { Exercise, Flag, SetLog, Unit } from './types';
+import type { Day, Exercise, Flag, SetLog, Unit } from './types';
 import { FLAG_LABELS, PROFILE_NAMES } from './types';
 
 export function profileName(id: string): string {
@@ -61,10 +61,38 @@ export function formatElapsed(seconds: number): string {
   return `${minutes}:${String(remain).padStart(2, '0')}`;
 }
 
+export function isBodyweightLoad(load: string | number | null | undefined): boolean {
+  if (load == null || load === '') return false;
+  if (typeof load === 'number') return load === 0;
+  const text = String(load).trim();
+  if (/^bodyweight$/i.test(text)) return true;
+  return /^-?\d+(?:\.\d+)?$/.test(text) && Number(text) === 0;
+}
+
+export function formatLoad(amount: number | null | undefined, unit: Unit, bodyweight = false): string {
+  if (bodyweight || amount === 0) {
+    if (amount == null || amount === 0) return 'BW';
+    return `BW + ${formatNumber(amount)} ${unit}`;
+  }
+  if (amount == null) return '';
+  return `${formatNumber(amount)} ${unit}`;
+}
+
+export function isBodyweightExercise(day: Day, name: string): boolean {
+  const key = name.trim().toLowerCase();
+  for (const circuit of day.circuits) {
+    for (const exercise of circuit.exercises) {
+      if (exercise.name.trim().toLowerCase() === key) return isBodyweightLoad(exercise.load);
+    }
+  }
+  return false;
+}
+
 function prescribedLoad(exercise: Exercise): string {
+  if (isBodyweightLoad(exercise.load)) return 'BW';
   const load = exercise.load ?? '';
   if (!/^-?\d+(?:\.\d+)?$/.test(load)) return load;
-  return `${formatNumber(Number(load))} ${exerciseUnit(exercise)}`;
+  return formatLoad(Number(load), exerciseUnit(exercise));
 }
 
 export function exerciseTarget(exercise: Exercise): string {
@@ -95,10 +123,11 @@ export function repTarget(reps: string): { label: string; count: number } | null
   return { label: reps, count: nums[nums.length - 1] };
 }
 
-export function formatSetSummary(set: SetLog): string {
+export function formatSetSummary(set: SetLog, bodyweight = false): string {
+  const weight = formatLoad(set.load, set.unit, bodyweight);
   let main = 'Logged';
-  if (set.load != null && set.reps != null) main = `${formatNumber(set.load)} ${set.unit} × ${set.reps}`;
-  else if (set.load != null) main = `${formatNumber(set.load)} ${set.unit}`;
+  if (weight && set.reps != null) main = `${weight} × ${set.reps}`;
+  else if (weight) main = weight;
   else if (set.reps != null) main = `${set.reps} reps`;
   if (set.workSec != null) main = main === 'Logged' ? `${set.workSec}s` : `${main} · ${set.workSec}s`;
   if (set.made === false) main = set.reps != null ? `${main} · missed` : main === 'Logged' ? 'Short' : `${main} · short`;

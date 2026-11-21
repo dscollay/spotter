@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseBackup } from '../src/backup.ts';
-import { exerciseTarget, prescriptionLine } from '../src/format.ts';
+import { exerciseTarget, formatLoad, prescriptionLine } from '../src/format.ts';
 import { buildSteps, latestSet, nextDayIndex, nextExercise, parseProgram } from '../src/program.ts';
 import type { Program, Session } from '../src/types.ts';
 
@@ -75,7 +75,7 @@ if (numericResult.ok) {
 const labeled = programs.get('bonnie')?.days[0].circuits[0].exercises[0];
 assert.ok(labeled);
 assert.equal(labeled.per_side, undefined);
-assert.equal(prescriptionLine(labeled), '2 sets · 8 reps · bodyweight · RPE 6 · tempo 3010');
+assert.equal(prescriptionLine(labeled), '2 sets · 8 reps · BW · RPE 6 · tempo 3010');
 
 const sided = structuredClone(readJson('bonnie')) as {
   days: { circuits: { exercises: Record<string, unknown>[] }[] }[];
@@ -86,7 +86,7 @@ assert.equal(sidedResult.ok, true, sidedResult.ok ? '' : sidedResult.errors.join
 if (sidedResult.ok) {
   const exercise = sidedResult.value.days[0].circuits[0].exercises[0];
   assert.equal(exercise.per_side, true);
-  assert.equal(prescriptionLine(exercise), '2 sets · 8 each side · bodyweight · RPE 6 · tempo 3010');
+  assert.equal(prescriptionLine(exercise), '2 sets · 8 each side · BW · RPE 6 · tempo 3010');
 }
 
 const badSide = structuredClone(readJson('bonnie')) as {
@@ -171,7 +171,11 @@ if (shippedBonnie.ok) {
   const afterLunge = bonnieSteps.findIndex((step) => step.kind === 'rest');
   const press = nextExercise(bonnieSteps, afterLunge);
   assert.equal(press?.name, 'Bench-elevated press-up');
-  assert.equal(exerciseTarget(press!), '45 sec · 0 kg');
+  assert.equal(exerciseTarget(press!), '45 sec · BW');
+  assert.equal(formatLoad(0, 'kg'), 'BW');
+  assert.equal(formatLoad(10, 'kg', true), 'BW + 10 kg');
+  assert.equal(formatLoad(25, 'kg'), '25 kg');
+  assert.equal(formatLoad(35, 'lb'), '35 lb');
   assert.equal(nextExercise(bonnieSteps, bonnieSteps.length - 1), null);
 }
 
