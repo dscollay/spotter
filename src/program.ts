@@ -219,6 +219,7 @@ export function parseProgram(value: unknown): ParseResult<Program> {
   const start = reqDate(typeof obj.start_date === 'string' ? obj.start_date : null, 'program.start_date', errors);
   const sessions = reqInt(obj, 'sessions_before_new_program', 'program', errors, 0);
   const progression = optString(obj, 'progression_rule', 'program', errors);
+  const deloadFrom = optInt(obj, 'deload_from_session', 'program', errors, 1);
   if (!Array.isArray(obj.days) || obj.days.length === 0) {
     push(errors, 'program.days must be a non-empty list.');
   }
@@ -245,6 +246,7 @@ export function parseProgram(value: unknown): ParseResult<Program> {
     days: days.filter((day): day is Day => day != null),
   };
   if (progression) program.progression_rule = progression;
+  if (deloadFrom != null) program.deload_from_session = deloadFrom;
   return { ok: true, value: program };
 }
 

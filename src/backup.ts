@@ -1,14 +1,18 @@
 import { parseDay, parseProgram, type ParseResult } from './program';
-import type { CheckIn, Day, Flag, ProfileId, Program, Session, SetLog, Unit } from './types';
-import { FLAGS, isProfileId } from './types';
+import type { Activity, ActivityKind, CheckIn, Day, Flag, ProfileId, Program, Session, SetLog, Skinfold, Tape, Unit, WeighIn } from './types';
+import { ACTIVITY_KINDS, FLAGS, isProfileId } from './types';
 
 export type BackupData = {
   app: 'spotter';
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   activeProfile: ProfileId | null;
   programs: Program[];
   sessions: Session[];
+  weights: WeighIn[];
+  skinfolds: Skinfold[];
+  tapes: Tape[];
+  activities: Activity[];
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -172,9 +176,10 @@ export function parseBackup(value: unknown): ParseResult<BackupData> {
   if (value.app !== 'spotter') {
     return { ok: false, errors: ['This is not a Spotter backup. Program files are imported from the Program tab.'] };
   }
-  if (value.version !== 1) {
-    return { ok: false, errors: [`This backup is version ${String(value.version)}. This app reads version 1.`] };
+  if (value.version !== 1 && value.version !== 2) {
+    return { ok: false, errors: [`This backup is version ${String(value.version)}. This app reads version 1 and 2.`] };
   }
+  const version = value.version;
   if (!isIso(value.exportedAt)) return { ok: false, errors: ['Backup exportedAt must be a date.'] };
   if (value.activeProfile != null && !isProfileId(value.activeProfile)) {
     return { ok: false, errors: ['Backup activeProfile must be dan, bonnie, audrey, or null.'] };
@@ -205,17 +210,160 @@ export function parseBackup(value: unknown): ParseResult<BackupData> {
     seenIds.add(parsed.session.id);
     sessions.push(parsed.session);
   });
-  if (errors.length) return { ok: false, errors };
+  const weights = parseRecords(value.weights, version, 'weights', errors, parseWeighIn);
+  const skinfolds = parseRecords(value.skinfolds, version, 'skinfolds', errors, parseSkinfold);
+  const tapes = parseRecords(value.tapes, version, 'tapes', errors, parseTape);
+  const activities = parseRecords(value.activities, version, 'activities', errors, parseActivity);
+  if (errors.length || !weights || !skinfolds || !tapes || !activities) return { ok: false, errors };
   return {
     ok: true,
     value: {
       app: 'spotter',
-      version: 1,
+      version,
       exportedAt: value.exportedAt,
       activeProfile: value.activeProfile ?? null,
       programs,
       sessions,
+      weights,
+      skinfolds,
+      tapes,
+      activities,
     },
+  };
+}
+
+function parseRecords<T extends { id: string }>(
+  value: unknown,
+  version: 1 | 2,
+  key: string,
+  errors: string[],
+  parse: (row: unknown, path: string, errors: string[]) => T | null,
+): T[] | null {
+  if (value == null) {
+    if (version === 1) return [];
+    errors.push(`Backup ${key} list is missing.`);
+    return null;
+  }
+  if (!Array.isArray(value)) {
+    errors.push(`Backup ${key} must be a list.`);
+    return null;
+  }
+  const rows: T[] = [];
+  const seen = new Set<string>();
+  value.forEach((row, index) => {
+    const parsed = parse(row, `${key}[${index}]`, errors);
+    if (!parsed) return;
+    if (seen.has(parsed.id)) errors.push(`Two ${key} share the id ${parsed.id}.`);
+    seen.add(parsed.id);
+    rows.push(parsed);
+  });
+  return rows;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function parseWeighIn(value: unknown, path: string, errors: string[]): WeighIn | null {
+  if (!isObject(value) || !isProfileId(value.profile) || typeof value.id !== 'string' || !value.id || !isIso(value.at)) {
+    errors.push(`${path} is not a weigh-in.`);
+    return null;
+  }
+  const kg = finiteNumber(value.kg);
+  if (kg == null || kg <= 0) {
+    errors.push(`${path} needs a weight in kg.`);
+    return null;
+  }
+  return { id: value.id, profile: value.profile, at: value.at, kg };
+}
+
+function parseSkinfold(value: unknown, path: string, errors: string[]): Skinfold | null {
+  if (!isObject(value) || !isProfileId(value.profile) || typeof value.id !== 'string' || !value.id || !isIso(value.at)) {
+    errors.push(`${path} is not a skinfold entry.`);
+    return null;
+  }
+  const sites = ['chest', 'midaxillary', 'triceps', 'subscapular', 'abdominal', 'suprailiac', 'thigh'] as const;
+  const numbers = {} as Record<(typeof sites)[number], number>;
+  for (const site of sites) {
+    const reading = finiteNumber(value[site]);
+    if (reading == null || reading < 0) {
+      errors.push(`${path} needs ${site} in mm.`);
+      return null;
+    }
+    numbers[site] = reading;
+  }
+  const age = value.age == null ? null : finiteNumber(value.age);
+  if (age != null && (!Number.isInteger(age) || age < 1 || age > 120)) {
+    errors.push(`${path} age must be a whole number when it is present.`);
+    return null;
+  }
+  return { id: value.id, profile: value.profile, at: value.at, age, ...numbers };
+}
+
+function parseTape(value: unknown, path: string, errors: string[]): Tape | null {
+  if (!isObject(value) || !isProfileId(value.profile) || typeof value.id !== 'string' || !value.id || !isIso(value.at)) {
+    errors.push(`${path} is not a tape entry.`);
+    return null;
+  }
+  const sites = ['waist', 'hips', 'chest', 'arm', 'thigh'] as const;
+  const numbers = {} as Record<(typeof sites)[number], number>;
+  for (const site of sites) {
+    const reading = finiteNumber(value[site]);
+    if (reading == null || reading <= 0) {
+      errors.push(`${path} needs ${site} in cm.`);
+      return null;
+    }
+    numbers[site] = reading;
+  }
+  return { id: value.id, profile: value.profile, at: value.at, ...numbers };
+}
+
+function parseActivity(value: unknown, path: string, errors: string[]): Activity | null {
+  const kinds = ACTIVITY_KINDS as readonly string[];
+  if (
+    !isObject(value) ||
+    !isProfileId(value.profile) ||
+    typeof value.id !== 'string' ||
+    !value.id ||
+    typeof value.date !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value.date) ||
+    typeof value.kind !== 'string' ||
+    !kinds.includes(value.kind)
+  ) {
+    errors.push(`${path} is not an activity.`);
+    return null;
+  }
+  const minutes = finiteNumber(value.minutes);
+  const distance = value.distanceKm == null ? null : finiteNumber(value.distanceKm);
+  const heart = value.avgHr == null ? null : finiteNumber(value.avgHr);
+  const effort = value.effort == null ? null : finiteNumber(value.effort);
+  if (minutes == null || minutes <= 0) {
+    errors.push(`${path} needs a duration in minutes.`);
+    return null;
+  }
+  if (distance != null && distance < 0) {
+    errors.push(`${path} distance must be in km.`);
+    return null;
+  }
+  if (heart != null && (!Number.isInteger(heart) || heart < 1 || heart > 250)) {
+    errors.push(`${path} heart rate must be a whole number when it is present.`);
+    return null;
+  }
+  if (effort != null && (!Number.isInteger(effort) || effort < 1 || effort > 10)) {
+    errors.push(`${path} effort must be from 1 to 10 when it is present.`);
+    return null;
+  }
+  return {
+    id: value.id,
+    profile: value.profile,
+    date: value.date,
+    kind: value.kind as ActivityKind,
+    minutes,
+    distanceKm: distance,
+    avgHr: heart,
+    level: typeof value.level === 'string' ? value.level : '',
+    effort,
+    note: typeof value.note === 'string' ? value.note : '',
   };
 }
 
@@ -224,13 +372,21 @@ export function buildBackup(input: {
   activeProfile: ProfileId | null;
   programs: Program[];
   sessions: Session[];
+  weights: WeighIn[];
+  skinfolds: Skinfold[];
+  tapes: Tape[];
+  activities: Activity[];
 }): BackupData {
   return {
     app: 'spotter',
-    version: 1,
+    version: 2,
     exportedAt: input.exportedAt,
     activeProfile: input.activeProfile,
     programs: input.programs,
     sessions: input.sessions,
+    weights: input.weights,
+    skinfolds: input.skinfolds,
+    tapes: input.tapes,
+    activities: input.activities,
   };
 }
