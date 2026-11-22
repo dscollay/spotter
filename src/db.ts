@@ -2,11 +2,12 @@ import audreyProgram from './programs/audrey.json';
 import bonnieProgram from './programs/bonnie.json';
 import danProgram from './programs/dan.json';
 import { parseProgram, programStamp } from './program';
-import type { ProfileId, Program, Session } from './types';
+import type { Activity, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
 import { isProfileId, PROFILE_IDS } from './types';
 
 const DB_NAME = 'spotter';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+const ALL_STORES = ['meta', 'programs', 'sessions', 'weights', 'skinfolds', 'tapes', 'activities'] as const;
 
 let opening: Promise<IDBDatabase> | null = null;
 let current: IDBDatabase | null = null;
@@ -40,6 +41,10 @@ function open(): Promise<IDBDatabase> {
         if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
         if (!db.objectStoreNames.contains('programs')) db.createObjectStore('programs');
         if (!db.objectStoreNames.contains('sessions')) db.createObjectStore('sessions', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('weights')) db.createObjectStore('weights', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('skinfolds')) db.createObjectStore('skinfolds', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('tapes')) db.createObjectStore('tapes', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('activities')) db.createObjectStore('activities', { keyPath: 'id' });
       };
       request.onsuccess = () => {
         const db = request.result;
@@ -201,6 +206,75 @@ export async function deleteSession(id: string): Promise<void> {
   await finish(transaction, 'delete the workout');
 }
 
+async function listStored<T>(store: string): Promise<T[]> {
+  const all = await read<T[]>(store, (objectStore) => objectStore.getAll());
+  return all ?? [];
+}
+
+async function putStored(store: string, row: { id: string }, label: string): Promise<void> {
+  const transaction = await access(store, 'readwrite');
+  transaction.objectStore(store).put(clone(row));
+  await finish(transaction, label);
+}
+
+async function deleteStored(store: string, id: string, label: string): Promise<void> {
+  const transaction = await access(store, 'readwrite');
+  transaction.objectStore(store).delete(id);
+  await finish(transaction, label);
+}
+
+export async function listWeights(): Promise<WeighIn[]> {
+  const rows = await listStored<WeighIn>('weights');
+  return rows.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export async function putWeight(row: WeighIn): Promise<void> {
+  await putStored('weights', row, 'save the weigh-in');
+}
+
+export async function deleteWeight(id: string): Promise<void> {
+  await deleteStored('weights', id, 'delete the weigh-in');
+}
+
+export async function listSkinfolds(): Promise<Skinfold[]> {
+  const rows = await listStored<Skinfold>('skinfolds');
+  return rows.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export async function putSkinfold(row: Skinfold): Promise<void> {
+  await putStored('skinfolds', row, 'save the skinfolds');
+}
+
+export async function deleteSkinfold(id: string): Promise<void> {
+  await deleteStored('skinfolds', id, 'delete the skinfolds');
+}
+
+export async function listTapes(): Promise<Tape[]> {
+  const rows = await listStored<Tape>('tapes');
+  return rows.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export async function putTape(row: Tape): Promise<void> {
+  await putStored('tapes', row, 'save the tape');
+}
+
+export async function deleteTape(id: string): Promise<void> {
+  await deleteStored('tapes', id, 'delete the tape');
+}
+
+export async function listActivities(): Promise<Activity[]> {
+  const rows = await listStored<Activity>('activities');
+  return rows.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+}
+
+export async function putActivity(row: Activity): Promise<void> {
+  await putStored('activities', row, 'save the activity');
+}
+
+export async function deleteActivity(id: string): Promise<void> {
+  await deleteStored('activities', id, 'delete the activity');
+}
+
 export async function ensureSeeded(): Promise<void> {
   const bundled: Record<ProfileId, unknown> = {
     dan: danProgram,
@@ -217,10 +291,8 @@ export async function ensureSeeded(): Promise<void> {
 }
 
 export async function wipeAll(): Promise<void> {
-  const transaction = await access(['meta', 'programs', 'sessions'], 'readwrite');
-  transaction.objectStore('meta').clear();
-  transaction.objectStore('programs').clear();
-  transaction.objectStore('sessions').clear();
+  const transaction = await access([...ALL_STORES], 'readwrite');
+  for (const name of ALL_STORES) transaction.objectStore(name).clear();
   await finish(transaction, 'clear the log');
   await ensureSeeded();
 }
@@ -228,26 +300,44 @@ export async function wipeAll(): Promise<void> {
 export async function replaceAll(input: {
   programs: Program[];
   sessions: Session[];
+  weights: WeighIn[];
+  skinfolds: Skinfold[];
+  tapes: Tape[];
+  activities: Activity[];
   activeProfile: ProfileId | null;
   lastBackupAt: string;
 }): Promise<void> {
-  const transaction = await access(['meta', 'programs', 'sessions'], 'readwrite');
+  const transaction = await access([...ALL_STORES], 'readwrite');
   const meta = transaction.objectStore('meta');
   const programs = transaction.objectStore('programs');
   const sessions = transaction.objectStore('sessions');
-  meta.clear();
-  programs.clear();
-  sessions.clear();
+  const weights = transaction.objectStore('weights');
+  const skinfolds = transaction.objectStore('skinfolds');
+  const tapes = transaction.objectStore('tapes');
+  const activities = transaction.objectStore('activities');
+  for (const name of ALL_STORES) transaction.objectStore(name).clear();
   if (input.activeProfile) meta.put(input.activeProfile, 'activeProfile');
   meta.put(input.lastBackupAt, 'lastBackupAt');
   for (const program of input.programs) programs.put(clone(program), program.profile);
   for (const session of input.sessions) sessions.put(clone(session));
+  for (const row of input.weights) weights.put(clone(row));
+  for (const row of input.skinfolds) skinfolds.put(clone(row));
+  for (const row of input.tapes) tapes.put(clone(row));
+  for (const row of input.activities) activities.put(clone(row));
   await finish(transaction, 'restore the backup');
   await ensureSeeded();
 }
 
-export async function mergeBackup(input: { programs: Program[]; sessions: Session[] }): Promise<{
+export async function mergeBackup(input: {
+  programs: Program[];
+  sessions: Session[];
+  weights: WeighIn[];
+  skinfolds: Skinfold[];
+  tapes: Tape[];
+  activities: Activity[];
+}): Promise<{
   addedSessions: number;
+  addedRecords: number;
   programsAdded: ProfileId[];
   programsKept: ProfileId[];
 }> {
@@ -268,5 +358,25 @@ export async function mergeBackup(input: { programs: Program[]; sessions: Sessio
     await putSession(session);
     addedSessions += 1;
   }
-  return { addedSessions, programsAdded, programsKept };
+  let addedRecords = 0;
+  addedRecords += await mergeRows(input.weights, listWeights, putWeight);
+  addedRecords += await mergeRows(input.skinfolds, listSkinfolds, putSkinfold);
+  addedRecords += await mergeRows(input.tapes, listTapes, putTape);
+  addedRecords += await mergeRows(input.activities, listActivities, putActivity);
+  return { addedSessions, addedRecords, programsAdded, programsKept };
+}
+
+async function mergeRows<T extends { id: string }>(
+  incoming: T[],
+  list: () => Promise<T[]>,
+  put: (row: T) => Promise<void>,
+): Promise<number> {
+  const existing = new Set((await list()).map((row) => row.id));
+  let added = 0;
+  for (const row of incoming) {
+    if (existing.has(row.id)) continue;
+    await put(row);
+    added += 1;
+  }
+  return added;
 }

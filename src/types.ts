@@ -60,6 +60,65 @@ export type Program = {
   sessions_before_new_program: number;
   days: Day[];
   progression_rule?: string;
+  /** Optional future field. Not written into the shipped program files. */
+  deload_from_session?: number;
+};
+
+export type WeighIn = {
+  id: string;
+  profile: ProfileId;
+  at: string;
+  kg: number;
+};
+
+export type Skinfold = {
+  id: string;
+  profile: ProfileId;
+  at: string;
+  age: number | null;
+  chest: number;
+  midaxillary: number;
+  triceps: number;
+  subscapular: number;
+  abdominal: number;
+  suprailiac: number;
+  thigh: number;
+};
+
+export type Tape = {
+  id: string;
+  profile: ProfileId;
+  at: string;
+  waist: number;
+  hips: number;
+  chest: number;
+  arm: number;
+  thigh: number;
+};
+
+export const ACTIVITY_KINDS = ['bike', 'treadmill', 'walk', 'golf', 'garden', 'other'] as const;
+export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
+
+export const ACTIVITY_LABELS: Record<ActivityKind, string> = {
+  bike: 'Stationary bike',
+  treadmill: 'Treadmill',
+  walk: 'Walk',
+  golf: 'Golf walked',
+  garden: 'Gardening or yard work',
+  other: 'Other',
+};
+
+export type Activity = {
+  id: string;
+  profile: ProfileId;
+  date: string;
+  kind: ActivityKind;
+  minutes: number;
+  distanceKm: number | null;
+  avgHr: number | null;
+  level: string;
+  effort: number | null;
+  note: string;
 };
 
 export type CheckIn = {

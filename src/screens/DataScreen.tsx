@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { buildBackup, parseBackup, type BackupData } from '../backup';
-import { listPrograms, listSessions, setLastBackup } from '../db';
+import { listActivities, listPrograms, listSessions, listSkinfolds, listTapes, listWeights, setLastBackup } from '../db';
 import { formatWhen, localDateISO, profileName } from '../format';
 import type { ProfileId } from '../types';
 import { PROFILE_IDS } from '../types';
@@ -49,9 +49,16 @@ export function DataScreen({
 
   async function exportBackup() {
     const exportedAt = new Date().toISOString();
-    const [programs, sessions] = await Promise.all([listPrograms(), listSessions()]);
+    const [programs, sessions, weights, skinfolds, tapes, activities] = await Promise.all([
+      listPrograms(),
+      listSessions(),
+      listWeights(),
+      listSkinfolds(),
+      listTapes(),
+      listActivities(),
+    ]);
     const active = profile;
-    const backup = buildBackup({ exportedAt, activeProfile: active, programs, sessions });
+    const backup = buildBackup({ exportedAt, activeProfile: active, programs, sessions, weights, skinfolds, tapes, activities });
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -102,9 +109,11 @@ export function DataScreen({
     ? PROFILE_IDS.map((id) => {
         const workouts = pending.sessions.filter((session) => session.profile === id).length;
         const program = pending.programs.find((item) => item.profile === id);
+        const weights = pending.weights.filter((row) => row.profile === id).length;
+        const activities = pending.activities.filter((row) => row.profile === id).length;
         const workoutsLabel = `${workouts} workout${workouts === 1 ? '' : 's'}`;
         const programLabel = program ? `program “${program.program_name}”` : 'no program';
-        return `${profileName(id)}: ${workoutsLabel}, ${programLabel}`;
+        return `${profileName(id)}: ${workoutsLabel}, ${weights} weigh-ins, ${activities} activities, ${programLabel}`;
       })
     : [];
 

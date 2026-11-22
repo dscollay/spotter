@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { BackupData } from './backup';
+import type { Household, Save } from './dashboard';
 import { CheckInScreen } from './screens/CheckInScreen';
 import { DataScreen } from './screens/DataScreen';
 import { HistoryScreen, SessionDetail } from './screens/HistoryScreen';
@@ -7,26 +8,40 @@ import { HomeScreen } from './screens/HomeScreen';
 import { ProgramScreen } from './screens/ProgramScreen';
 import { WorkoutScreen } from './screens/WorkoutScreen';
 import {
+  deleteActivity,
   deleteSession,
+  deleteSkinfold,
+  deleteTape,
+  deleteWeight,
   ensureSeeded,
   syncRepoPrograms,
   getActiveProfile,
   getLastBackup,
   getProgram,
+  listActivities,
   listSessions,
+  listSkinfolds,
+  listTapes,
+  listWeights,
   mergeBackup,
+  putActivity,
   putProgram,
   putSession,
+  putSkinfold,
+  putTape,
+  putWeight,
   replaceAll,
   setActiveProfile,
   wipeAll,
 } from './db';
 import { profileName } from './format';
 import { nextDayIndex } from './program';
-import type { CheckIn, Day, ProfileId, Program, Session } from './types';
+import type { Activity, CheckIn, Day, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
 import { PROFILE_IDS, PROFILE_NAMES } from './types';
 import { unlockAudio } from './audio';
 import { armKeepAwake, bindWakeVideo, releaseKeepAwake, requestPersistentStorage, storageIsPersistent } from './wake';
+
+const EMPTY_HOUSEHOLD: Household = { sessions: [], weights: [], skinfolds: [], tapes: [], activities: [] };
 
 type Screen =
   | { name: 'pick' }
@@ -44,6 +59,7 @@ export function App() {
   const [profile, setProfile] = useState<ProfileId | null>(null);
   const [program, setProgram] = useState<Program | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [household, setHousehold] = useState<Household>(EMPTY_HOUSEHOLD);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: 'pick' });
@@ -61,8 +77,11 @@ export function App() {
         setPersisted(storage);
         if (active) {
           setProfile(active);
-          setProgram(await getProgram(active));
-          setSessions(await listSessions(active));
+          const [nextProgram, logs] = await Promise.all([getProgram(active), loadHousehold()]);
+          if (!live) return;
+          setProgram(nextProgram);
+          setHousehold(logs);
+          setSessions(logs.sessions.filter((session) => session.profile === active));
           setScreen({ name: 'home' });
         }
         setReady(true);
@@ -70,8 +89,11 @@ export function App() {
           if (!live) return;
           const current = await getActiveProfile();
           if (!current || !live) return;
+          const logs = await loadHousehold();
+          if (!live) return;
           setProgram(await getProgram(current));
-          setSessions(await listSessions(current));
+          setHousehold(logs);
+          setSessions(logs.sessions.filter((session) => session.profile === current));
         });
       } catch (error) {
         if (!live) return;
@@ -92,9 +114,11 @@ export function App() {
   }, []);
 
   async function loadProfile(next: ProfileId) {
-    setProgram(await getProgram(next));
-    setSessions(await listSessions(next));
-    setLastBackupAt(await getLastBackup());
+    const [nextProgram, logs, backupAt] = await Promise.all([getProgram(next), loadHousehold(), getLastBackup()]);
+    setProgram(nextProgram);
+    setHousehold(logs);
+    setSessions(logs.sessions.filter((session) => session.profile === next));
+    setLastBackupAt(backupAt);
   }
 
   async function choose(next: ProfileId) {
@@ -119,14 +143,62 @@ export function App() {
 
   async function remember(session: Session) {
     await putSession(session);
+    const sort = (rows: Session[]) => rows.slice().sort((a, b) => b.startedAt.localeCompare(a.startedAt));
     setSessions((current) => {
       const index = current.findIndex((item) => item.id === session.id);
       const next = current.slice();
       if (index === -1) next.unshift(session);
       else next[index] = session;
-      return next.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+      return sort(next);
     });
+    setHousehold((current) => ({ ...current, sessions: sort(upsert(current.sessions, session)) }));
   }
+
+  async function loadHousehold(): Promise<Household> {
+    const [allSessions, weights, skinfolds, tapes, activities] = await Promise.all([
+      listSessions(),
+      listWeights(),
+      listSkinfolds(),
+      listTapes(),
+      listActivities(),
+    ]);
+    return { sessions: allSessions, weights, skinfolds, tapes, activities };
+  }
+
+  const recordSave: Save = {
+    weight: async (row: WeighIn) => {
+      await putWeight(row);
+      setHousehold((current) => ({ ...current, weights: upsert(current.weights, row) }));
+    },
+    deleteWeight: async (id: string) => {
+      await deleteWeight(id);
+      setHousehold((current) => ({ ...current, weights: current.weights.filter((row) => row.id !== id) }));
+    },
+    skinfold: async (row: Skinfold) => {
+      await putSkinfold(row);
+      setHousehold((current) => ({ ...current, skinfolds: upsert(current.skinfolds, row) }));
+    },
+    deleteSkinfold: async (id: string) => {
+      await deleteSkinfold(id);
+      setHousehold((current) => ({ ...current, skinfolds: current.skinfolds.filter((row) => row.id !== id) }));
+    },
+    tape: async (row: Tape) => {
+      await putTape(row);
+      setHousehold((current) => ({ ...current, tapes: upsert(current.tapes, row) }));
+    },
+    deleteTape: async (id: string) => {
+      await deleteTape(id);
+      setHousehold((current) => ({ ...current, tapes: current.tapes.filter((row) => row.id !== id) }));
+    },
+    activity: async (row: Activity) => {
+      await putActivity(row);
+      setHousehold((current) => ({ ...current, activities: upsert(current.activities, row) }));
+    },
+    deleteActivity: async (id: string) => {
+      await deleteActivity(id);
+      setHousehold((current) => ({ ...current, activities: current.activities.filter((row) => row.id !== id) }));
+    },
+  };
 
   async function begin(checkIn: CheckIn) {
     if (!profile || !program) return;
@@ -185,7 +257,7 @@ export function App() {
   }
 
   return (
-    <>
+    <div data-person={profile ?? undefined}>
       <video
         ref={bindWakeVideo}
         className="wake-video"
@@ -196,7 +268,7 @@ export function App() {
         preload="auto"
         aria-hidden="true"
       />
-      <main className={showNav ? 'app' : 'app no-nav'} data-screen={screen.name}>
+      <main className={showNav ? 'app' : 'app no-nav'} data-screen={screen.name} data-person={profile ?? undefined}>
         {actionError && <p className="error">{actionError}</p>}
         {screen.name === 'pick' && <Picker onChoose={(id) => void choose(id)} />}
         {screen.name === 'home' && profile && (
@@ -215,7 +287,10 @@ export function App() {
             }}
             onDiscard={(id) => {
               void deleteSession(id)
-                .then(() => setSessions((current) => current.filter((session) => session.id !== id)))
+                .then(() => {
+                  setSessions((current) => current.filter((session) => session.id !== id));
+                  setHousehold((current) => ({ ...current, sessions: current.sessions.filter((session) => session.id !== id) }));
+                })
                 .catch((error: unknown) => setActionError(error instanceof Error ? error.message : 'Could not discard that workout.'));
             }}
             onSwitch={() => {
@@ -223,6 +298,8 @@ export function App() {
               setScreen({ name: 'pick' });
             }}
             onBackup={() => openTab('data')}
+            household={household}
+            save={recordSave}
           />
         )}
         {screen.name === 'checkin' && program && profile && (
@@ -241,6 +318,7 @@ export function App() {
             onDelete={async (id) => {
               await deleteSession(id);
               setSessions((current) => current.filter((session) => session.id !== id));
+              setHousehold((current) => ({ ...current, sessions: current.sessions.filter((session) => session.id !== id) }));
             }}
             onExit={() => {
               releaseKeepAwake();
@@ -302,6 +380,10 @@ export function App() {
               await replaceAll({
                 programs: backup.programs,
                 sessions: backup.sessions,
+                weights: backup.weights,
+                skinfolds: backup.skinfolds,
+                tapes: backup.tapes,
+                activities: backup.activities,
                 activeProfile: backup.activeProfile,
                 lastBackupAt: backup.exportedAt,
               });
@@ -311,6 +393,7 @@ export function App() {
               else {
                 setProgram(null);
                 setSessions([]);
+                setHousehold(await loadHousehold());
               }
             }}
             onMerged={async (backup) => {
@@ -318,13 +401,14 @@ export function App() {
               if (profile) await loadProfile(profile);
               const added = result.programsAdded.map((id) => profileName(id)).join(', ');
               const kept = result.programsKept.map((id) => profileName(id)).join(', ');
-              return `Added ${result.addedSessions} workout${result.addedSessions === 1 ? '' : 's'}.${added ? ` Programs added: ${added}.` : ''}${kept ? ` Kept existing programs for ${kept}.` : ''}`;
+              return `Added ${result.addedSessions} workout${result.addedSessions === 1 ? '' : 's'} and ${result.addedRecords} other record${result.addedRecords === 1 ? '' : 's'}.${added ? ` Programs added: ${added}.` : ''}${kept ? ` Kept existing programs for ${kept}.` : ''}`;
             }}
             onWiped={async () => {
               await wipeAll();
               setProfile(null);
               setProgram(null);
               setSessions([]);
+              setHousehold(EMPTY_HOUSEHOLD);
               setLastBackupAt(null);
             }}
           />
@@ -346,8 +430,16 @@ export function App() {
           ))}
         </nav>
       )}
-    </>
+    </div>
   );
+}
+
+function upsert<T extends { id: string }>(rows: T[], row: T): T[] {
+  const index = rows.findIndex((item) => item.id === row.id);
+  const next = rows.slice();
+  if (index === -1) next.unshift(row);
+  else next[index] = row;
+  return next;
 }
 
 function Picker({ onChoose }: { onChoose: (profile: ProfileId) => void }) {

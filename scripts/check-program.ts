@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseBackup } from '../src/backup.ts';
+import { buildBackup, parseBackup } from '../src/backup.ts';
 import { exerciseTarget, formatLoad, prescriptionLine } from '../src/format.ts';
+import {
+  bodyFatEstimate,
+  deloadPhrase,
+  parseGarminWeightCsv,
+  readiness,
+  skinfoldSum,
+  weekStart,
+  withinRange,
+} from '../src/metrics.ts';
 import { buildSteps, latestSet, nextDayIndex, nextExercise, parseProgram } from '../src/program.ts';
-import type { Program, Session } from '../src/types.ts';
+import type { Program, Session, Skinfold } from '../src/types.ts';
 
 function readJson(name: string): unknown {
   return JSON.parse(readFileSync(new URL(`../src/programs/${name}.json`, import.meta.url), 'utf8'));
@@ -296,5 +305,137 @@ if (badResult) {
 
 const notBackup = parseBackup({ profile: 'bonnie', days: [] });
 assert.equal(notBackup.ok, false);
+if (backup.ok) {
+  assert.equal(backup.value.version, 1);
+  assert.equal(backup.value.weights.length, 0);
+  assert.equal(backup.value.activities.length, 0);
+}
+
+const exported = buildBackup({
+  exportedAt: '2026-11-21T08:00:00.000Z',
+  activeProfile: 'dan',
+  programs: [],
+  sessions: [],
+  weights: [{ id: 'dan:1', profile: 'dan', at: '2026-11-21T08:00:00.000Z', kg: 82.4 }],
+  skinfolds: [],
+  tapes: [],
+  activities: [
+    {
+      id: 'golf',
+      profile: 'dan',
+      date: '2026-11-21',
+      kind: 'golf',
+      minutes: 180,
+      distanceKm: null,
+      avgHr: null,
+      level: '',
+      effort: 4,
+      note: '',
+    },
+  ],
+});
+const roundTrip = parseBackup(exported);
+assert.equal(roundTrip.ok, true, roundTrip.ok ? '' : roundTrip.errors.join('\n'));
+if (roundTrip.ok) {
+  assert.equal(roundTrip.value.version, 2);
+  assert.equal(roundTrip.value.weights[0].kg, 82.4);
+  assert.equal(roundTrip.value.activities[0].kind, 'golf');
+}
+
+function readRepoProgram(name: string): Program {
+  const parsed = parseProgram(JSON.parse(readFileSync(new URL(`../programs/${name}.json`, import.meta.url), 'utf8')));
+  assert.equal(parsed.ok, true, parsed.ok ? '' : parsed.errors.join('\n'));
+  if (!parsed.ok) throw new Error(name);
+  return parsed.value;
+}
+
+const danBlock = readRepoProgram('dan');
+const bonnieBlock = readRepoProgram('bonnie');
+const audreyBlock = readRepoProgram('audrey');
+assert.equal(danBlock.days.every((day) => day.deload !== true), true);
+assert.equal(bonnieBlock.days.every((day) => day.deload !== true), true);
+assert.equal(deloadPhrase(danBlock, 0), 'Deload in 15');
+assert.equal(deloadPhrase(danBlock, 14), 'Deload in 1');
+assert.equal(deloadPhrase(danBlock, 15), 'Deload this session');
+assert.equal(deloadPhrase(danBlock, 17), 'Deload this session');
+assert.equal(deloadPhrase(danBlock, 18), null);
+assert.equal(deloadPhrase(bonnieBlock, 0), 'Deload in 15');
+assert.equal(deloadPhrase(audreyBlock, 0), null);
+const flagged = structuredClone(audreyBlock);
+flagged.days[0].deload = true;
+assert.equal(deloadPhrase(flagged, 0), null);
+flagged.deload_from_session = 10;
+assert.equal(deloadPhrase(flagged, 0), 'Deload in 9');
+assert.equal(deloadPhrase(flagged, 9), 'Deload this session');
+
+const fold = {
+  id: 'fold',
+  profile: 'dan',
+  at: '2026-11-21T12:00:00.000Z',
+  age: 30,
+  chest: 10,
+  midaxillary: 10,
+  triceps: 10,
+  subscapular: 10,
+  abdominal: 20,
+  suprailiac: 10,
+  thigh: 10,
+} as Skinfold;
+assert.equal(skinfoldSum(fold), 80);
+assert.equal(bodyFatEstimate(fold), 11.7);
+assert.equal(bodyFatEstimate({ ...fold, profile: 'bonnie' }), 17.4);
+assert.equal(bodyFatEstimate({ ...fold, age: null }), null);
+assert.equal(bodyFatEstimate({ ...fold, profile: 'audrey' }), null);
+
+const garmin = parseGarminWeightCsv(`Body
+Time,Weight,BMI
+2026-11-01 07:15:00,82.4,25
+2026-11-01 21:05:00,81.9,24.8
+2026-11-01 21:05:00,81.9,24.8
+`);
+assert.equal(garmin.error, null);
+assert.equal(garmin.unit, 'kg');
+assert.equal(garmin.rows.length, 2);
+assert.equal(garmin.rows[0].kg, 82.4);
+assert.equal(garmin.rows[1].kg, 81.9);
+assert.notEqual(garmin.rows[0].at, garmin.rows[1].at);
+const again = parseGarminWeightCsv(`Time,Weight
+2026-11-01 07:15:00,82.4
+2026-11-01 21:05:00,81.9
+`);
+assert.equal(again.rows[0].at, garmin.rows[0].at);
+const pounds = parseGarminWeightCsv('Date,Weight (lbs)\n11/01/2026 8:00 AM,180\n');
+assert.equal(pounds.unit, 'lb');
+assert.equal(pounds.rows.length, 1);
+assert.equal(pounds.rows[0].kg, 81.65);
+assert.equal(parseGarminWeightCsv('hello').error != null, true);
+
+const monday = weekStart(new Date(2026, 10, 21, 15, 30));
+assert.equal(monday.getFullYear(), 2026);
+assert.equal(monday.getMonth(), 10);
+assert.equal(monday.getDate(), 16);
+assert.equal(weekStart(new Date(2026, 10, 22, 9)).getDate(), 16);
+const earlyMorning = new Date(2026, 10, 22, 3, 18);
+assert.equal(withinRange('2026-11-22', '4w', earlyMorning), true);
+assert.equal(withinRange(new Date(2026, 10, 22, 12).toISOString(), '4w', earlyMorning), true);
+assert.equal(withinRange('2026-01-01', '4w', earlyMorning), false);
+
+const now = new Date('2026-11-21T12:00:00.000Z');
+const low = [
+  { profile: 'dan', startedAt: '2026-11-21T08:00:00.000Z', checkIn: { sleep: 2, energy: 4, soreness: 2 } },
+  { profile: 'dan', startedAt: '2026-11-20T08:00:00.000Z', checkIn: { sleep: 2, energy: 4, soreness: 2 } },
+] as Session[];
+assert.equal(readiness(low, 'dan', now).easeOff, true);
+assert.equal(readiness(low.slice(0, 1), 'dan', now).easeOff, false);
+const fine = [
+  { profile: 'dan', startedAt: '2026-11-21T08:00:00.000Z', checkIn: { sleep: 4, energy: 4, soreness: 2 } },
+  { profile: 'dan', startedAt: '2026-11-20T08:00:00.000Z', checkIn: { sleep: 4, energy: 4, soreness: 2 } },
+] as Session[];
+assert.equal(readiness(fine, 'dan', now).easeOff, false);
+const sore = [
+  { profile: 'dan', startedAt: '2026-11-21T08:00:00.000Z', checkIn: { sleep: 4, energy: 4, soreness: 4 } },
+  { profile: 'dan', startedAt: '2026-11-20T08:00:00.000Z', checkIn: { sleep: 4, energy: 4, soreness: 4 } },
+] as Session[];
+assert.equal(readiness(sore, 'dan', now).easeOff, true);
 
 console.log('program checks passed');
