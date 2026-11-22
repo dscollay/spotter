@@ -96,12 +96,13 @@ export type Tape = {
   thigh: number;
 };
 
-export const ACTIVITY_KINDS = ['bike', 'treadmill', 'walk', 'golf', 'garden', 'other'] as const;
+export const ACTIVITY_KINDS = ['bike', 'treadmill', 'run', 'walk', 'golf', 'garden', 'other'] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
 export const ACTIVITY_LABELS: Record<ActivityKind, string> = {
   bike: 'Stationary bike',
   treadmill: 'Treadmill',
+  run: 'Run',
   walk: 'Walk',
   golf: 'Golf walked',
   garden: 'Gardening or yard work',
@@ -115,6 +116,8 @@ export type Activity = {
   kind: ActivityKind;
   minutes: number;
   distanceKm: number | null;
+  /** Percent grade. Missing on older logs. */
+  inclinePct?: number | null;
   avgHr: number | null;
   level: string;
   effort: number | null;

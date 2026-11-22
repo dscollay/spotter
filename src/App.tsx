@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { BackupData } from './backup';
 import { Dashboard, type Household, type Save } from './dashboard';
+import { DEFAULT_WEIGHT_KG } from './metrics';
+import { ActivityScreen } from './screens/ActivityScreen';
 import { CheckInScreen } from './screens/CheckInScreen';
 import { DataScreen } from './screens/DataScreen';
 import { HistoryScreen, SessionDetail } from './screens/HistoryScreen';
@@ -16,6 +18,7 @@ import {
   ensureSeeded,
   syncRepoPrograms,
   getActiveProfile,
+  getDefaultWeights,
   getLastBackup,
   getProgram,
   listActivities,
@@ -32,6 +35,7 @@ import {
   putWeight,
   replaceAll,
   setActiveProfile,
+  setDefaultWeight,
   wipeAll,
 } from './db';
 import { profileName } from './format';
@@ -52,7 +56,8 @@ type Screen =
   | { name: 'session'; sessionId: string }
   | { name: 'program' }
   | { name: 'data' }
-  | { name: 'dashboard' };
+  | { name: 'dashboard' }
+  | { name: 'activity' };
 
 export function App() {
   const [ready, setReady] = useState(false);
@@ -61,6 +66,7 @@ export function App() {
   const [program, setProgram] = useState<Program | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [household, setHousehold] = useState<Household>(EMPTY_HOUSEHOLD);
+  const [defaults, setDefaults] = useState<Record<ProfileId, number>>(DEFAULT_WEIGHT_KG);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: 'pick' });
@@ -78,10 +84,11 @@ export function App() {
         setPersisted(storage);
         if (active) {
           setProfile(active);
-          const [nextProgram, logs] = await Promise.all([getProgram(active), loadHousehold()]);
+          const [nextProgram, logs, storedWeights] = await Promise.all([getProgram(active), loadHousehold(), getDefaultWeights()]);
           if (!live) return;
           setProgram(nextProgram);
           setHousehold(logs);
+          setDefaults(storedWeights);
           setSessions(logs.sessions.filter((session) => session.profile === active));
           setScreen({ name: 'home' });
         }
@@ -115,9 +122,15 @@ export function App() {
   }, []);
 
   async function loadProfile(next: ProfileId) {
-    const [nextProgram, logs, backupAt] = await Promise.all([getProgram(next), loadHousehold(), getLastBackup()]);
+    const [nextProgram, logs, backupAt, storedWeights] = await Promise.all([
+      getProgram(next),
+      loadHousehold(),
+      getLastBackup(),
+      getDefaultWeights(),
+    ]);
     setProgram(nextProgram);
     setHousehold(logs);
+    setDefaults(storedWeights);
     setSessions(logs.sessions.filter((session) => session.profile === next));
     setLastBackupAt(backupAt);
   }
@@ -131,7 +144,7 @@ export function App() {
     window.scrollTo(0, 0);
   }
 
-  function openTab(name: 'home' | 'history' | 'program' | 'data' | 'dashboard') {
+  function openTab(name: 'home' | 'history' | 'program' | 'data' | 'dashboard' | 'activity') {
     setActionError('');
     if (!profile && name !== 'data') {
       setScreen({ name: 'pick' });
@@ -320,8 +333,25 @@ export function App() {
                 Switch
               </button>
             </div>
-            <Dashboard profile={profile} program={program} household={household} save={recordSave} />
+            <Dashboard profile={profile} program={program} household={household} defaults={defaults} save={recordSave} />
           </>
+        )}
+        {screen.name === 'activity' && profile && (
+          <ActivityScreen
+            profile={profile}
+            household={household}
+            defaults={defaults}
+            onSave={recordSave.activity}
+            onDelete={recordSave.deleteActivity}
+            onDefault={async (kg) => {
+              await setDefaultWeight(profile, kg);
+              setDefaults(await getDefaultWeights());
+            }}
+            onSwitch={() => {
+              releaseKeepAwake();
+              setScreen({ name: 'pick' });
+            }}
+          />
         )}
         {screen.name === 'checkin' && program && profile && (
           <CheckInScreen
@@ -441,6 +471,7 @@ export function App() {
             [
               ['home', 'Today'],
               ['dashboard', 'Dashboard'],
+              ['activity', 'Activity'],
               ['history', 'History'],
               ['program', 'Program'],
               ['data', 'Data'],

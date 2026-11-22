@@ -1,6 +1,7 @@
 import audreyProgram from './programs/audrey.json';
 import bonnieProgram from './programs/bonnie.json';
 import danProgram from './programs/dan.json';
+import { DEFAULT_WEIGHT_KG } from './metrics';
 import { parseProgram, programStamp } from './program';
 import type { Activity, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
 import { isProfileId, PROFILE_IDS } from './types';
@@ -132,6 +133,23 @@ export async function getLastBackup(): Promise<string | null> {
 
 export async function setLastBackup(iso: string): Promise<void> {
   await setMeta('lastBackupAt', iso);
+}
+
+export async function getDefaultWeights(): Promise<Record<ProfileId, number>> {
+  const value = await getMeta('defaultWeights');
+  const stored = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  const weights = { ...DEFAULT_WEIGHT_KG };
+  for (const id of PROFILE_IDS) {
+    const kg = stored[id];
+    if (typeof kg === 'number' && Number.isFinite(kg) && kg > 0) weights[id] = kg;
+  }
+  return weights;
+}
+
+export async function setDefaultWeight(profile: ProfileId, kg: number): Promise<void> {
+  const weights = await getDefaultWeights();
+  weights[profile] = kg;
+  await setMeta('defaultWeights', weights);
 }
 
 export async function getSummaryAt(profile: ProfileId): Promise<string | null> {

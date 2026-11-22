@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { formatClock, formatLoad, formatNumber, formatWhen, localDateISO, profileName } from './format';
-import { deloadPhrase } from './metrics';
+import { activityTotals, deloadPhrase, inWeek, weekStart, weightForEstimate } from './metrics';
 import { completedProgramSessions } from './program';
 import { SitePopup } from './site-guide';
 import {
@@ -23,8 +23,8 @@ import {
   type TrendRange,
 } from './metrics';
 import { Sparkline } from './spark';
-import type { Activity, ActivityKind, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
-import { ACTIVITY_KINDS, ACTIVITY_LABELS } from './types';
+import type { Activity, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
+import { PROFILE_IDS } from './types';
 
 export type Household = {
   sessions: Session[];
@@ -55,11 +55,13 @@ export function Dashboard({
   profile,
   program,
   household,
+  defaults,
   save,
 }: {
   profile: ProfileId;
   program: Program | null;
   household: Household;
+  defaults: Record<ProfileId, number>;
   save: Save;
 }) {
   const now = useMemo(() => new Date(), []);
@@ -153,7 +155,7 @@ export function Dashboard({
       {showBody && (
         <BodySection profile={profile} household={household} range={range} now={now} tone={tone} save={save} />
       )}
-      <ActivitySection profile={profile} household={household} range={range} now={now} tone={tone} save={save} />
+      <ActivitySummary profile={profile} household={household} defaults={defaults} range={range} now={now} />
       <StrengthSection profile={profile} sessions={household.sessions} range={range} now={now} tone={tone} />
       <BestsSection profile={profile} sessions={household.sessions} />
       <LogBook profile={profile} household={household} save={save} showBody={showBody} />
@@ -285,40 +287,45 @@ function BodySection({
   );
 }
 
-function ActivitySection({
+function ActivitySummary({
   profile,
   household,
+  defaults,
   range,
   now,
-  tone,
-  save,
 }: {
   profile: ProfileId;
   household: Household;
+  defaults: Record<ProfileId, number>;
   range: TrendRange;
   now: Date;
-  tone: string;
-  save: Save;
 }) {
-  const weekMinutes = familyWeek(household, now).find((row) => row.profile === profile)?.minutes ?? 0;
-  const rows = household.activities.filter((row) => row.profile === profile && withinRange(row.date, range, now));
+  const people = PROFILE_IDS.filter((id) => id === profile || household.activities.some((row) => row.profile === id));
+  const rangeLabel = range === '4w' ? '4 weeks' : range === '3m' ? '3 months' : 'All time';
+  const start = weekStart(now);
   return (
-    <section className="card" id="activity-log">
+    <section className="card" id="activity-summary">
       <p className="eyebrow">Activity</p>
-      <p className={`big ${tone}`}>
-        {formatNumber(weekMinutes)}
-        <span> min this week</span>
-      </p>
-      <Sparkline values={chronologicalDate(rows).map((row) => row.minutes)} />
-      <EntryList
-        rows={chronologicalDate(rows)
-          .reverse()
-          .map((row) => ({
-            id: row.id,
-            label: `${ACTIVITY_LABELS[row.kind]} · ${formatNumber(row.minutes)} min${row.avgHr ? ` · HR ${row.avgHr}` : ''} · ${formatDay(row.date)}`,
-          }))}
-        onDelete={save.deleteActivity}
-      />
+      {people.map((id) => {
+        const kg = weightForEstimate(id, household.weights, defaults).kg;
+        const week = activityTotals(household.activities, id, (row) => inWeek(row.date, start), kg);
+        const span = activityTotals(household.activities, id, (row) => withinRange(row.date, range, now), kg);
+        return (
+          <div key={id}>
+            <p>
+              <strong className={`who-${id}`}>{profileName(id)}</strong>
+            </p>
+            <p>
+              This week · {week.sessions} {week.sessions === 1 ? 'session' : 'sessions'} · {formatNumber(week.minutes)} min · estimate{' '}
+              {formatNumber(week.kcal)} kcal
+            </p>
+            <p>
+              {rangeLabel} · {span.sessions} {span.sessions === 1 ? 'session' : 'sessions'} · {formatNumber(span.minutes)} min · estimate{' '}
+              {formatNumber(span.kcal)} kcal
+            </p>
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -425,15 +432,6 @@ function LogBook({ profile, household, save, showBody }: { profile: ProfileId; h
   const [tapeId, setTapeId] = useState<string | null>(null);
   const [tapeDate, setTapeDate] = useState(localDateISO());
   const [tape, setTape] = useState<Record<TapeSite, string>>(emptyTape());
-  const [activityId, setActivityId] = useState<string | null>(null);
-  const [kind, setKind] = useState<ActivityKind>('walk');
-  const [activityDate, setActivityDate] = useState(localDateISO());
-  const [minutes, setMinutes] = useState('');
-  const [distance, setDistance] = useState('');
-  const [heart, setHeart] = useState('');
-  const [level, setLevel] = useState('');
-  const [effort, setEffort] = useState('');
-  const [activityNote, setActivityNote] = useState('');
 
   async function onWeight(event: FormEvent) {
     event.preventDefault();
@@ -519,50 +517,6 @@ function LogBook({ profile, household, save, showBody }: { profile: ProfileId; h
     setTapeId(null);
     setTape(emptyTape());
     setNote('Tape saved.');
-  }
-
-  async function onActivity(event: FormEvent) {
-    event.preventDefault();
-    const duration = Number(minutes);
-    const km = distance.trim() === '' ? null : Number(distance);
-    const hr = heart.trim() === '' ? null : Number(heart);
-    const feel = effort.trim() === '' ? null : Number(effort);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate) || !Number.isFinite(duration) || duration <= 0) {
-      setNote('Enter a date and minutes.');
-      return;
-    }
-    if (km != null && (!Number.isFinite(km) || km < 0)) {
-      setNote('Distance needs to be kilometres, or leave it blank.');
-      return;
-    }
-    if (hr != null && (!Number.isInteger(hr) || hr < 1 || hr > 250)) {
-      setNote('Heart rate needs to be a whole number, or leave it blank.');
-      return;
-    }
-    if (feel != null && (!Number.isInteger(feel) || feel < 1 || feel > 10)) {
-      setNote('Effort is from 1 to 10, or leave it blank.');
-      return;
-    }
-    await save.activity({
-      id: activityId ?? crypto.randomUUID(),
-      profile,
-      date: activityDate,
-      kind,
-      minutes: duration,
-      distanceKm: km,
-      avgHr: hr,
-      level: level.trim(),
-      effort: feel,
-      note: activityNote.trim(),
-    });
-    setActivityId(null);
-    setMinutes('');
-    setDistance('');
-    setHeart('');
-    setLevel('');
-    setEffort('');
-    setActivityNote('');
-    setNote('Activity saved.');
   }
 
   return (
@@ -686,59 +640,6 @@ function LogBook({ profile, household, save, showBody }: { profile: ProfileId; h
           </form>
         </>
       )}
-      <form onSubmit={(event) => void onActivity(event)}>
-        <h3>Activity</h3>
-        <Field label="Activity">
-          <select value={kind} onChange={(event) => setKind(event.target.value as ActivityKind)}>
-            {ACTIVITY_KINDS.map((id) => (
-              <option key={id} value={id}>
-                {ACTIVITY_LABELS[id]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Activity date">
-          <input type="date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} required />
-        </Field>
-        <Field label="Minutes">
-          <input inputMode="decimal" value={minutes} onChange={(event) => setMinutes(event.target.value)} required />
-        </Field>
-        <Field label="Distance km">
-          <input inputMode="decimal" value={distance} onChange={(event) => setDistance(event.target.value)} />
-        </Field>
-        <Field label="Average heart rate">
-          <input inputMode="numeric" value={heart} onChange={(event) => setHeart(event.target.value)} />
-        </Field>
-        <Field label="Level or speed">
-          <input type="text" value={level} onChange={(event) => setLevel(event.target.value)} />
-        </Field>
-        <Field label="Effort 1 to 10">
-          <input inputMode="numeric" value={effort} onChange={(event) => setEffort(event.target.value)} />
-        </Field>
-        <Field label="Note">
-          <input type="text" value={activityNote} onChange={(event) => setActivityNote(event.target.value)} />
-        </Field>
-        <button type="submit" className="primary">
-          Save activity
-        </button>
-        <EditRow
-          rows={household.activities.filter((row) => row.profile === profile)}
-          label={(row) => `${ACTIVITY_LABELS[row.kind]} · ${formatNumber(row.minutes)} min`}
-          onEdit={(row) => {
-            if (logRef.current) logRef.current.open = true;
-            setActivityId(row.id);
-            setKind(row.kind);
-            setActivityDate(row.date);
-            setMinutes(String(row.minutes));
-            setDistance(row.distanceKm == null ? '' : String(row.distanceKm));
-            setHeart(row.avgHr == null ? '' : String(row.avgHr));
-            setLevel(row.level);
-            setEffort(row.effort == null ? '' : String(row.effort));
-            setActivityNote(row.note);
-          }}
-          onDelete={save.deleteActivity}
-        />
-      </form>
     </details>
   );
 }
@@ -855,12 +756,3 @@ function chronological<T extends { at: string }>(rows: T[]): T[] {
   return rows.slice().sort((a, b) => a.at.localeCompare(b.at));
 }
 
-function formatDay(day: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return day;
-  const [year, month, date] = day.split('-').map(Number);
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(year, month - 1, date));
-}
-
-function chronologicalDate<T extends { date: string }>(rows: T[]): T[] {
-  return rows.slice().sort((a, b) => a.date.localeCompare(b.date));
-}
