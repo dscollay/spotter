@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { BackupData } from './backup';
-import type { Household, Save } from './dashboard';
+import { Dashboard, type Household, type Save } from './dashboard';
 import { CheckInScreen } from './screens/CheckInScreen';
 import { DataScreen } from './screens/DataScreen';
 import { HistoryScreen, SessionDetail } from './screens/HistoryScreen';
@@ -51,7 +51,8 @@ type Screen =
   | { name: 'history' }
   | { name: 'session'; sessionId: string }
   | { name: 'program' }
-  | { name: 'data' };
+  | { name: 'data' }
+  | { name: 'dashboard' };
 
 export function App() {
   const [ready, setReady] = useState(false);
@@ -130,7 +131,7 @@ export function App() {
     window.scrollTo(0, 0);
   }
 
-  function openTab(name: 'home' | 'history' | 'program' | 'data') {
+  function openTab(name: 'home' | 'history' | 'program' | 'data' | 'dashboard') {
     setActionError('');
     if (!profile && name !== 'data') {
       setScreen({ name: 'pick' });
@@ -298,9 +299,29 @@ export function App() {
               setScreen({ name: 'pick' });
             }}
             onBackup={() => openTab('data')}
-            household={household}
-            save={recordSave}
           />
+        )}
+        {screen.name === 'dashboard' && profile && (
+          <>
+            <p className="wordmark brand">
+              <img className="brand-mark" src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="" width={36} height={36} />
+              Spotter
+            </p>
+            <div className="profile-row">
+              <h1>{profileName(profile)}</h1>
+              <button
+                type="button"
+                className="secondary compact"
+                onClick={() => {
+                  releaseKeepAwake();
+                  setScreen({ name: 'pick' });
+                }}
+              >
+                Switch
+              </button>
+            </div>
+            <Dashboard profile={profile} program={program} household={household} save={recordSave} />
+          </>
         )}
         {screen.name === 'checkin' && program && profile && (
           <CheckInScreen
@@ -419,6 +440,7 @@ export function App() {
           {(
             [
               ['home', 'Today'],
+              ['dashboard', 'Dashboard'],
               ['history', 'History'],
               ['program', 'Program'],
               ['data', 'Data'],

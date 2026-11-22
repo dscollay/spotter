@@ -1,5 +1,8 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { formatClock, formatLoad, formatNumber, formatWhen, localDateISO, profileName } from './format';
+import { deloadPhrase } from './metrics';
+import { completedProgramSessions } from './program';
+import { SitePopup } from './site-guide';
 import {
   SKINFOLD_SITES,
   TAPE_SITES,
@@ -20,7 +23,7 @@ import {
   type TrendRange,
 } from './metrics';
 import { Sparkline } from './spark';
-import type { Activity, ActivityKind, ProfileId, Session, Skinfold, Tape, WeighIn } from './types';
+import type { Activity, ActivityKind, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
 import { ACTIVITY_KINDS, ACTIVITY_LABELS } from './types';
 
 export type Household = {
@@ -48,7 +51,17 @@ const RANGES: { id: TrendRange; label: string }[] = [
   { id: 'all', label: 'All time' },
 ];
 
-export function Dashboard({ profile, household, save }: { profile: ProfileId; household: Household; save: Save }) {
+export function Dashboard({
+  profile,
+  program,
+  household,
+  save,
+}: {
+  profile: ProfileId;
+  program: Program | null;
+  household: Household;
+  save: Save;
+}) {
   const now = useMemo(() => new Date(), []);
   const [range, setRange] = useState<TrendRange>('4w');
   const tone = `who-${profile}`;
@@ -65,8 +78,34 @@ export function Dashboard({ profile, household, save }: { profile: ProfileId; ho
     .map((session) => session.checkIn.sleep);
   const week = familyWeek(household, now);
   const showBody = profile !== 'audrey';
+  const done = program
+    ? completedProgramSessions(
+        program,
+        household.sessions.filter((session) => session.profile === profile),
+      ).length
+    : 0;
+  const total = program?.sessions_before_new_program ?? 0;
+  const phrase = program ? deloadPhrase(program, done) : null;
   return (
     <>
+      <section className="card" id="block-progress">
+        <p className="eyebrow">Block</p>
+        {program ? (
+          <>
+            <p className={`big ${tone}`}>
+              {done}
+              <span> of {total}</span>
+            </p>
+            <p>
+              Session {done} of {total}
+            </p>
+            {phrase && <p>{phrase}</p>}
+            {done >= total && total > 0 && <p className="due">New program due</p>}
+          </>
+        ) : (
+          <p>No program on this phone yet.</p>
+        )}
+      </section>
       <section className={ready.easeOff ? 'card ease-card' : 'card'} id="readiness">
         <p className="eyebrow">Readiness</p>
         {ready.count === 0 ? (
@@ -574,9 +613,14 @@ function LogBook({ profile, household, save, showBody }: { profile: ProfileId; h
             </Field>
             <div className="sites">
               {SKINFOLD_SITES.map(([site, label]) => (
-                <Field key={site} label={`${label} mm`}>
-                  <input inputMode="decimal" value={sites[site]} onChange={(event) => setSites((current) => ({ ...current, [site]: event.target.value }))} />
-                </Field>
+                <SiteField
+                  key={site}
+                  site={site}
+                  label={label}
+                  sex={profile === 'bonnie' ? 'female' : 'male'}
+                  value={sites[site]}
+                  onChange={(value) => setSites((current) => ({ ...current, [site]: value }))}
+                />
               ))}
             </div>
             <Field label="Age for the estimate">
@@ -696,6 +740,35 @@ function LogBook({ profile, household, save, showBody }: { profile: ProfileId; h
         />
       </form>
     </details>
+  );
+}
+
+function SiteField({
+  site,
+  label,
+  sex,
+  value,
+  onChange,
+}: {
+  site: SkinfoldSite;
+  label: string;
+  sex: 'male' | 'female';
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const id = `site-${site}`;
+  return (
+    <div className="field">
+      <span className="site-label">
+        <label htmlFor={id}>{label} mm</label>
+        <button type="button" className="info" aria-label={`${label} site`} onClick={() => setOpen(true)}>
+          i
+        </button>
+      </span>
+      <input id={id} inputMode="decimal" value={value} onChange={(event) => onChange(event.target.value)} />
+      {open && <SitePopup site={site} sex={sex} onClose={() => setOpen(false)} />}
+    </div>
   );
 }
 
