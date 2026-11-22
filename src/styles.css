@@ -591,8 +591,8 @@ a.secondary {
   height: auto;
   margin: 4px auto;
   display: block;
-  background: #efe6da;
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 12px;
 }
 
 .site-backdrop { place-items: center; }
@@ -602,7 +602,7 @@ a.secondary {
   max-height: 280px;
   object-fit: contain;
   object-position: center;
-  background: #1a1816;
+  background: #fff;
   border-radius: 12px;
 }
 

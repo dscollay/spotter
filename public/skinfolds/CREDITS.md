@@ -16,9 +16,13 @@
 - Figure: Exhibit 3-10, location of the suprailiac skinfold.
 - Licence: Public domain. This is a work prepared for the United States federal government. The copy here is cropped and compressed from that manual.
 
-## Sites without a usable free photograph
+## Chest and abdominal
 
-Chest, midaxillary, abdominal, and thigh are original line diagrams drawn for Spotter. Searches that did not turn up a usable free image of the site itself:
+These popups reuse the same public-domain NHANES III Exhibit 3-10 figure, with the suprailiac hatch covered and a chest or abdominal fold marked instead. The figure is traced from `suprailiac.jpg`.
+
+## Midaxillary and thigh
+
+No usable free photograph of these sites was found. They are original line drawings in the same black-on-white style as Exhibit 3-10. Searches:
 
 - Wikimedia Commons categories and file search for skinfold, skin fold caliper, plicometria, suprailiac, and Hautfalte. Results were calipers, unrelated skin folds, or journal PDFs, not site photographs. https://commons.wikimedia.org/wiki/Category:Skinfold_caliper
 - Openverse, licences limited to CC0, public domain, and CC-BY, for “skinfold caliper”, “suprailiac skinfold”, and “plicometria”: no results.

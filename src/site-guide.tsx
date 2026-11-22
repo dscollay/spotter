@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Dot, Fold, FrontTorso, Guide, SideTorso, ThighFigure } from './body-figure';
+import { Fold, FrontTorso, SideTorso, ThighFigure } from './body-figure';
 import type { SkinfoldSite } from './metrics';
 
 type FoldName = 'vertical' | 'diagonal';
@@ -9,38 +9,38 @@ const GUIDES: Record<SkinfoldSite, { name: string; fold: FoldName; landmark: str
   chest: {
     name: 'Chest',
     fold: 'diagonal',
-    landmark: 'Halfway from the front of the armpit to the nipple.',
-    female: 'One-third of the way from the front of the armpit to the nipple.',
+    landmark: 'Half the distance between the anterior axillary line and the nipple.',
+    female: 'One-third of the distance between the anterior axillary line and the nipple.',
   },
   midaxillary: {
     name: 'Midaxillary',
     fold: 'vertical',
-    landmark: 'On the midaxillary line, level with the xiphoid.',
+    landmark: 'On the midaxillary line, level with the xiphoid process.',
   },
   triceps: {
     name: 'Triceps',
     fold: 'vertical',
-    landmark: 'Back midline of the upper arm, midway from shoulder to elbow.',
+    landmark: 'Posterior midline of the upper arm, midway between the acromion and the olecranon.',
   },
   subscapular: {
     name: 'Subscapular',
     fold: 'diagonal',
-    landmark: '1–2 cm below the bottom tip of the shoulder blade.',
+    landmark: '1–2 cm below the inferior angle of the scapula.',
   },
   abdominal: {
     name: 'Abdominal',
     fold: 'vertical',
-    landmark: '2 cm to the right of the navel.',
+    landmark: '2 cm to the right of the umbilicus.',
   },
   suprailiac: {
     name: 'Suprailiac',
     fold: 'diagonal',
-    landmark: 'Just above the iliac crest, on the anterior axillary line.',
+    landmark: 'Immediately above the iliac crest, in the anterior axillary line.',
   },
   thigh: {
     name: 'Thigh',
     fold: 'vertical',
-    landmark: 'Front midline of the thigh, midway from hip crease to kneecap.',
+    landmark: 'Anterior midline, midway between the proximal patella and the inguinal crease.',
   },
 };
 
@@ -101,16 +101,14 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
   if (site === 'midaxillary') {
     return (
       <SideTorso>
-        <Fold x1={78} y1={148} x2={78} y2={178} />
+        <Fold x={92} y={176} angle={90} />
       </SideTorso>
     );
   }
   if (site === 'thigh') {
     return (
       <ThighFigure>
-        <Guide x1={71} y1={44} x2={71} y2={228} />
-        <Fold x1={71} y1={120} x2={71} y2={150} />
-        <Dot x={71} y={236} />
+        <Fold x={90} y={160} angle={90} />
       </ThighFigure>
     );
   }
@@ -119,8 +117,7 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
       {site === 'chest' && <ChestMark sex={sex} />}
       {site === 'abdominal' && (
         <>
-          <Dot x={100} y={214} />
-          <Fold x1={88} y1={200} x2={88} y2={228} />
+          <Fold x={228} y={469} angle={90} />
         </>
       )}
     </FrontTorso>
@@ -128,18 +125,8 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
 }
 
 function ChestMark({ sex }: { sex: Sex }) {
-  const axilla = { x: 46, y: 150 };
-  const nipple = { x: 78, y: 168 };
+  const axilla = { x: 150, y: 328 };
+  const nipple = { x: 177, y: 342 };
   const t = sex === 'female' ? 1 / 3 : 1 / 2;
-  const x = axilla.x + (nipple.x - axilla.x) * t;
-  const y = axilla.y + (nipple.y - axilla.y) * t;
-  const dx = 12;
-  const dy = 10;
-  return (
-    <>
-      <Guide x1={axilla.x} y1={axilla.y} x2={nipple.x} y2={nipple.y} />
-      <Dot x={nipple.x} y={nipple.y} />
-      <Fold x1={x - dx} y1={y - dy} x2={x + dx} y2={y + dy} />
-    </>
-  );
+  return <Fold x={axilla.x + (nipple.x - axilla.x) * t} y={axilla.y + (nipple.y - axilla.y) * t} angle={32} />;
 }
