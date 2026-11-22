@@ -44,6 +44,14 @@ const GUIDES: Record<SkinfoldSite, { name: string; fold: FoldName; landmark: str
   },
 };
 
+/** External photo references. Link only; the images stay on those pages. */
+const SEE_PHOTO: Partial<Record<SkinfoldSite, string>> = {
+  chest: 'https://www.topendsports.com/testing/skinfold-chest.htm',
+  midaxillary: 'https://www.topendsports.com/testing/skinfold-axilla.htm',
+  abdominal: 'https://www.topendsports.com/testing/skinfold-abdominal.htm',
+  thigh: 'https://www.topendsports.com/testing/skinfold-front-thigh.htm',
+};
+
 const PHOTOS: Partial<Record<SkinfoldSite, { file: string; credit: string }>> = {
   triceps: {
     file: 'skinfolds/triceps.jpg',
@@ -91,6 +99,13 @@ export function SitePopup({ site, sex, onClose }: { site: SkinfoldSite; sex: Sex
         <p>
           {guide.fold === 'vertical' ? 'Vertical' : 'Diagonal'} fold. {landmark}
         </p>
+        {SEE_PHOTO[site] && (
+          <p className="see-photo">
+            <a href={SEE_PHOTO[site]} target="_blank" rel="noopener">
+              See photo
+            </a>
+          </p>
+        )}
         {photo && <p className="credit">{photo.credit}</p>}
       </div>
     </div>
@@ -108,7 +123,7 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
   if (site === 'thigh') {
     return (
       <ThighFigure>
-        <Fold x={172} y={830} angle={90} />
+        <Fold x={186} y={834} angle={90} />
       </ThighFigure>
     );
   }

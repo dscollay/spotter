@@ -608,6 +608,10 @@ a.secondary {
 
 .credit { color: var(--muted); font-size: 0.82rem; }
 
+.see-photo { margin: 8px 0 0; font-size: 0.9rem; }
+
+.see-photo a { color: var(--sage-dark); }
+
 .site-popup { position: relative; padding-top: 36px; }
 
 .site-popup p { margin: 0; }
