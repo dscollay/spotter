@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Fold, FrontTorso, SideTorso, ThighFigure } from './body-figure';
+import { ArmRaised, Fold, FrontTorso, ThighFigure } from './body-figure';
 import type { SkinfoldSite } from './metrics';
 
 type FoldName = 'vertical' | 'diagonal';
@@ -100,33 +100,29 @@ export function SitePopup({ site, sex, onClose }: { site: SkinfoldSite; sex: Sex
 function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
   if (site === 'midaxillary') {
     return (
-      <SideTorso>
-        <Fold x={92} y={176} angle={90} />
-      </SideTorso>
+      <ArmRaised>
+        <Fold x={152} y={405} angle={90} />
+      </ArmRaised>
     );
   }
   if (site === 'thigh') {
     return (
       <ThighFigure>
-        <Fold x={90} y={160} angle={90} />
+        <Fold x={172} y={830} angle={90} />
       </ThighFigure>
     );
   }
   return (
     <FrontTorso>
       {site === 'chest' && <ChestMark sex={sex} />}
-      {site === 'abdominal' && (
-        <>
-          <Fold x={228} y={469} angle={90} />
-        </>
-      )}
+      {site === 'abdominal' && <Fold x={238} y={470} angle={90} />}
     </FrontTorso>
   );
 }
 
 function ChestMark({ sex }: { sex: Sex }) {
-  const axilla = { x: 150, y: 328 };
-  const nipple = { x: 177, y: 342 };
+  const axilla = { x: 150, y: 336 };
+  const nipple = { x: 178, y: 344 };
   const t = sex === 'female' ? 1 / 3 : 1 / 2;
   return <Fold x={axilla.x + (nipple.x - axilla.x) * t} y={axilla.y + (nipple.y - axilla.y) * t} angle={32} />;
 }

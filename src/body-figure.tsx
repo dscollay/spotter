@@ -1,77 +1,78 @@
 import type { ReactNode } from 'react';
+import { NHANES_ARM } from './nhanes-arm';
 import { NHANES_FRONT } from './nhanes-front';
 
-const ink = '#111';
+const ink = '#1a1a1a';
+const mark = '#1f8f86';
 
-/** The NHANES III front figure, with its own suprailiac hatch covered so each site can add its own mark. */
+/** NHANES III Exhibit 3-10, with the printed suprailiac hatch removed from the tracing. */
 export function FrontTorso({ children }: { children?: ReactNode }) {
   return (
     <svg className="figure" viewBox="0 0 491 760" aria-hidden="true">
       <rect width="491" height="760" fill="#fff" />
       <path d={NHANES_FRONT} fill="none" stroke={ink} strokeWidth="1.15" />
-      <rect x="122" y="410" width="36" height="60" fill="#fff" />
       {children}
     </svg>
   );
 }
 
-/** Side view with the arm raised. Chest faces left. Each stroke is separate so the outline stays a person. */
-export function SideTorso({ children }: { children?: ReactNode }) {
+/** The same front figure with the right arm raised, so the midaxillary line is clear. */
+export function ArmRaised({ children }: { children?: ReactNode }) {
   return (
-    <svg className="figure" viewBox="0 0 200 400" aria-hidden="true">
-      <rect width="200" height="400" fill="#fff" />
-      <g fill="none" stroke={ink} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-        <ellipse cx="104" cy="46" rx="22" ry="26" />
-        <path d="M82 48h12" />
-        <path d="M96 70 L92 96" />
-        <path d="M114 70 L120 96" />
-        <path d="M92 96 C72 118 64 148 68 178 C72 214 70 260 66 320" />
-        <path d="M120 96 C140 118 146 156 140 196 C134 246 136 286 128 320" />
-        <path d="M86 112 C62 92 40 64 34 40" />
-        <path d="M104 118 C82 96 60 72 54 46" />
-        <path d="M34 40 L26 28 M34 40 L32 22 M34 40 L42 26" />
-        <path d="M68 176h12" />
-      </g>
+    <svg className="figure" viewBox="0 0 491 760" aria-hidden="true">
+      <rect width="491" height="760" fill="#fff" />
+      <path d={NHANES_ARM} fill="none" stroke={ink} strokeWidth="1.15" />
       {children}
     </svg>
   );
 }
 
-/** Standing right thigh, inguinal crease at the top and patella at the knee. */
+/**
+ * The NHANES front figure from the waist down, with the legs continued in the
+ * same line weight. Subject's right thigh is on the viewer's left.
+ */
 export function ThighFigure({ children }: { children?: ReactNode }) {
   return (
-    <svg className="figure" viewBox="0 0 180 320" aria-hidden="true">
-      <rect width="180" height="320" fill="#fff" />
-      <g fill="none" stroke={ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M28 48c18-16 46-22 70-16 20 6 36 4 48-8" />
-        <path d="M40 52c-4 40-2 90 4 140 4 36 6 70 8 92" />
-        <path d="M128 40c6 40 4 90-2 140-4 36-6 70-8 92" />
-        <path d="M52 284c10 16 28 24 46 22 18-2 34-12 42-24" />
-        <ellipse cx="96" cy="286" rx="22" ry="12" />
+    <svg className="figure" viewBox="0 400 491 700" aria-hidden="true">
+      <rect x="0" y="400" width="491" height="700" fill="#fff" />
+      <path d={NHANES_FRONT} fill="none" stroke={ink} strokeWidth="1.15" />
+      <g fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M149 520 C148.5 540 147.5 600 146 640 C144.5 680 139.7 716.7 140 760 C140.3 803.3 145.3 856.7 148 900 C150.7 943.3 154.7 1000 156 1020" />
+        <path d="M214 760 C212 780 205 836.7 202 880 C199 923.3 197 996.7 196 1020" />
+        <path d="M351 520 C351.5 540 352.5 600 354 640 C355.5 680 360.3 716.7 360 760 C359.7 803.3 354.7 856.7 352 900 C349.3 943.3 345.3 1000 344 1020" />
+        <path d="M286 760 C288 780 295 836.7 298 880 C301 923.3 303 996.7 304 1020" />
+        <path d="M158 650 C161.7 648.3 173 636.7 180 640 C187 643.3 194.3 651.7 200 670 C205.7 688.3 211.7 736.7 214 750" />
+        <path d="M342 650 C338.3 648.3 327 636.7 320 640 C313 643.3 305.7 651.7 300 670 C294.3 688.3 288.3 736.7 286 750" />
+        <path d="M214 760 C216.7 766.7 224 791.3 230 800 C236 808.7 243.3 812 250 812 C256.7 812 264 808.7 270 800 C276 791.3 283.3 766.7 286 760" />
+        <path d="M156 1020 C155 1025.8 146.7 1046.3 150 1055 C153.3 1063.7 167.3 1072 176 1072 C184.7 1072 198.7 1063.7 202 1055 C205.3 1046.3 197 1025.8 196 1020" />
+        <path d="M344 1020 C345 1025.8 353.3 1046.3 350 1055 C346.7 1063.7 332.7 1072 324 1072 C315.3 1072 301.3 1063.7 298 1055 C294.7 1046.3 303 1025.8 304 1020" />
+        <ellipse cx="176" cy="1004" rx="16" ry="22" />
+        <ellipse cx="324" cy="1004" rx="16" ry="22" />
       </g>
       {children}
     </svg>
   );
 }
 
-/** Short parallel strokes, the way the NHANES drawing marks a fold. */
-export function Fold({ x, y, angle }: { x: number; y: number; angle: number }) {
+/** One thick dash, plus a ring, so the site stays obvious at phone size. */
+export function Fold({ x, y, angle, size = 1 }: { x: number; y: number; angle: number; size?: number }) {
   const rad = (angle * Math.PI) / 180;
-  const dx = Math.cos(rad) * 9;
-  const dy = Math.sin(rad) * 9;
-  const ox = -Math.sin(rad) * 3.2;
-  const oy = Math.cos(rad) * 3.2;
+  const len = 18 * size;
+  const dx = Math.cos(rad) * len;
+  const dy = Math.sin(rad) * len;
+  const sw = 8 * size;
   return (
-    <g stroke="#111" strokeWidth="1.7" strokeLinecap="round">
-      {[-1, 0, 1].map((step) => (
-        <line
-          key={step}
-          x1={x - dx + ox * step}
-          y1={y - dy + oy * step}
-          x2={x + dx + ox * step}
-          y2={y + dy + oy * step}
-        />
-      ))}
+    <g>
+      <circle cx={x} cy={y} r={13 * size} fill="#fff" stroke={mark} strokeWidth={sw * 0.7} />
+      <line
+        x1={x - dx}
+        y1={y - dy}
+        x2={x + dx}
+        y2={y + dy}
+        stroke={mark}
+        strokeWidth={sw}
+        strokeLinecap="round"
+      />
     </g>
   );
 }

@@ -587,7 +587,7 @@ a.secondary {
 }
 
 .figure {
-  width: min(100%, 220px);
+  width: 100%;
   height: auto;
   margin: 4px auto;
   display: block;
