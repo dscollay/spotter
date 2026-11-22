@@ -8,6 +8,7 @@ import {
   parseGarminWeightCsv,
   readiness,
   skinfoldSum,
+  kcalEstimate,
   weekStart,
   withinRange,
 } from '../src/metrics.ts';
@@ -419,6 +420,9 @@ const earlyMorning = new Date(2026, 10, 22, 3, 18);
 assert.equal(withinRange('2026-11-22', '4w', earlyMorning), true);
 assert.equal(withinRange(new Date(2026, 10, 22, 12).toISOString(), '4w', earlyMorning), true);
 assert.equal(withinRange('2026-01-01', '4w', earlyMorning), false);
+assert.equal(kcalEstimate({ kind: 'walk', minutes: 30 }, 80), 140);
+assert.equal(kcalEstimate({ kind: 'treadmill', minutes: 30, distanceKm: 2.4, inclinePct: 10 }, 80), 296);
+assert.equal(kcalEstimate({ kind: 'golf', minutes: 60 }, 70), 301);
 
 const now = new Date('2026-11-21T12:00:00.000Z');
 const low = [

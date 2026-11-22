@@ -335,6 +335,7 @@ function parseActivity(value: unknown, path: string, errors: string[]): Activity
   }
   const minutes = finiteNumber(value.minutes);
   const distance = value.distanceKm == null ? null : finiteNumber(value.distanceKm);
+  const incline = !('inclinePct' in value) || value.inclinePct == null ? null : finiteNumber(value.inclinePct);
   const heart = value.avgHr == null ? null : finiteNumber(value.avgHr);
   const effort = value.effort == null ? null : finiteNumber(value.effort);
   if (minutes == null || minutes <= 0) {
@@ -343,6 +344,10 @@ function parseActivity(value: unknown, path: string, errors: string[]): Activity
   }
   if (distance != null && distance < 0) {
     errors.push(`${path} distance must be in km.`);
+    return null;
+  }
+  if (incline != null && (incline < 0 || incline > 40)) {
+    errors.push(`${path} incline must be a percent from 0 to 40.`);
     return null;
   }
   if (heart != null && (!Number.isInteger(heart) || heart < 1 || heart > 250)) {
@@ -360,6 +365,7 @@ function parseActivity(value: unknown, path: string, errors: string[]): Activity
     kind: value.kind as ActivityKind,
     minutes,
     distanceKm: distance,
+    inclinePct: incline,
     avgHr: heart,
     level: typeof value.level === 'string' ? value.level : '',
     effort,

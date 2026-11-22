@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Dashboard, type Household, type Save } from '../dashboard';
 import { backupIsStale, formatWhen, profileName } from '../format';
-import { deloadPhrase } from '../metrics';
 import { completedProgramSessions, nextDayIndex } from '../program';
 import { sendCoachSummary } from '../summary';
 import type { ProfileId, Program, Session } from '../types';
@@ -19,8 +17,6 @@ export function HomeScreen({
   onDiscard,
   onSwitch,
   onBackup,
-  household,
-  save,
 }: {
   profile: ProfileId;
   program: Program | null;
@@ -31,8 +27,6 @@ export function HomeScreen({
   onDiscard: (id: string) => void;
   onSwitch: () => void;
   onBackup: () => void;
-  household: Household;
-  save: Save;
 }) {
   const name = profileName(profile);
   const inProgress = sessions.find((session) => session.status === 'in_progress');
@@ -51,7 +45,7 @@ export function HomeScreen({
           Switch
         </button>
       </div>
-      <p className="muted">{name}'s workout starts here. The week below includes anyone already saved on this phone.</p>
+      <p className="muted">Only {name}'s workouts are on this screen.</p>
       {stale && (
         <div className="banner">
           <p>
@@ -84,7 +78,6 @@ export function HomeScreen({
           onDiscard={setDiscardId}
         />
       )}
-      <Dashboard profile={profile} household={household} save={save} />
       <button
         type="button"
         className="secondary"
@@ -134,20 +127,20 @@ function ProgramHero({
 }) {
   const done = completedProgramSessions(program, sessions).length;
   const total = program.sessions_before_new_program;
-  const phrase = deloadPhrase(program, done);
   const day = program.days[nextDayIndex(program, sessions)];
   const width = total > 0 ? Math.min(100, (done / total) * 100) : 0;
   return (
     <section className="card">
       <p className="eyebrow">{program.program_name}</p>
       <p>
-        Session {done} of {total}
+        {done} of {total} sessions
       </p>
-      {phrase && <p>{phrase}</p>}
       <div className="bar" aria-hidden="true">
         <span style={{ width: `${width}%` }} />
       </div>
-      {done >= total && total > 0 && <p className="due">New program due</p>}
+      {done >= total && total > 0 && (
+        <p>This block has reached its session count. Ask the coach for the next program. You can keep logging on this one until it arrives.</p>
+      )}
       {inProgress ? (
         <>
           <p className="eyebrow">In progress</p>

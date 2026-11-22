@@ -454,3 +454,105 @@ function parseGarminTime(raw: string): string | null {
 export function weighInId(profile: ProfileId, at: string): string {
   return `${profile}:${at}`;
 }
+
+/** Editable fallback when a person has no weigh-in. Not a measurement. */
+export const DEFAULT_WEIGHT_KG: Record<ProfileId, number> = {
+  dan: 80,
+  bonnie: 65,
+  audrey: 50,
+};
+
+export type WeightSource = { kg: number; source: 'weigh-in' | 'default' };
+
+export function weightForEstimate(profile: ProfileId, weights: WeighIn[], defaults: Record<ProfileId, number>): WeightSource {
+  const latest = weights
+    .filter((row) => row.profile === profile)
+    .slice()
+    .sort((a, b) => b.at.localeCompare(a.at))[0];
+  if (latest) return { kg: latest.kg, source: 'weigh-in' };
+  return { kg: defaults[profile] ?? DEFAULT_WEIGHT_KG[profile], source: 'default' };
+}
+
+export type EffortInput = {
+  kind: Activity['kind'];
+  minutes: number;
+  distanceKm?: number | null;
+  inclinePct?: number | null;
+};
+
+/**
+ * kcal = MET × kg × hours.
+ * MET bands are the Compendium of Physical Activities (Ainsworth 2011):
+ * walk 3.0 mph 3.5, run 6 mph 9.8, stationary bike general 7.0,
+ * golf walking with clubs 4.3, yard work general 3.8, other moderate 4.0.
+ * Treadmill, walk, or run with both distance and incline uses the ACSM
+ * walking equation below 100 m/min, and the running equation at or above that.
+ * MET = VO2 / 3.5, then the same kcal formula.
+ */
+export function kcalEstimate(input: EffortInput, kg: number): number {
+  if (!Number.isFinite(input.minutes) || input.minutes <= 0 || !Number.isFinite(kg) || kg <= 0) return 0;
+  const met = effortMet(input);
+  return Math.round(met * kg * (input.minutes / 60));
+}
+
+export function effortUsesAcsm(input: EffortInput): boolean {
+  return speedMPerMin(input) != null && input.inclinePct != null && (input.kind === 'treadmill' || input.kind === 'walk' || input.kind === 'run');
+}
+
+function effortMet(input: EffortInput): number {
+  const speed = speedMPerMin(input);
+  const grade = input.inclinePct == null ? null : input.inclinePct / 100;
+  if (speed != null && grade != null && (input.kind === 'treadmill' || input.kind === 'walk' || input.kind === 'run')) {
+    const running = input.kind === 'run' || speed >= 100;
+    const vo2 = running ? 0.2 * speed + 0.9 * speed * grade + 3.5 : 0.1 * speed + 1.8 * speed * grade + 3.5;
+    return vo2 / 3.5;
+  }
+  if ((input.kind === 'walk' || input.kind === 'treadmill') && speed != null) return walkMet(speed * 0.0372822715);
+  if (input.kind === 'run' && speed != null) return runMet(speed * 0.0372822715);
+  if (input.kind === 'run') return 9.8;
+  if (input.kind === 'bike') return 7;
+  if (input.kind === 'golf') return 4.3;
+  if (input.kind === 'garden') return 3.8;
+  if (input.kind === 'walk' || input.kind === 'treadmill') return 3.5;
+  return 4;
+}
+
+function speedMPerMin(input: EffortInput): number | null {
+  if (input.distanceKm == null || input.distanceKm <= 0 || input.minutes <= 0) return null;
+  return (input.distanceKm * 1000) / input.minutes;
+}
+
+function walkMet(mph: number): number {
+  if (mph < 2.25) return 2.8;
+  if (mph < 2.75) return 3;
+  if (mph < 3.25) return 3.5;
+  if (mph < 3.75) return 4.3;
+  if (mph < 4.25) return 5;
+  if (mph < 4.75) return 7;
+  return 8.3;
+}
+
+function runMet(mph: number): number {
+  if (mph < 5.5) return 8.3;
+  if (mph < 6.5) return 9.8;
+  if (mph < 7.5) return 11;
+  if (mph < 8.5) return 11.8;
+  if (mph < 9.5) return 12.8;
+  return 14.5;
+}
+
+export type ActivityTotals = { sessions: number; minutes: number; kcal: number };
+
+export function activityTotals(
+  activities: Activity[],
+  profile: ProfileId,
+  include: (activity: Activity) => boolean,
+  kg: number,
+): ActivityTotals {
+  const rows = activities.filter((activity) => activity.profile === profile && include(activity));
+  return {
+    sessions: rows.length,
+    minutes: rows.reduce((total, activity) => total + activity.minutes, 0),
+    kcal: rows.reduce((total, activity) => total + kcalEstimate(activity, kg), 0),
+  };
+}
