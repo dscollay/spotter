@@ -599,7 +599,7 @@ a.secondary {
 
 .site-photo {
   width: 100%;
-  max-height: 200px;
+  max-height: 280px;
   object-fit: contain;
   object-position: center;
   background: #1a1816;

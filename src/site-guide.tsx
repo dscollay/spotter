@@ -53,6 +53,10 @@ const PHOTOS: Partial<Record<SkinfoldSite, { file: string; credit: string }>> = 
     file: 'skinfolds/subscapular.jpg',
     credit: 'NHANES Anthropometry Procedures Manual, 2007, Exhibit 3-16. Public domain, CDC.',
   },
+  suprailiac: {
+    file: 'skinfolds/suprailiac.jpg',
+    credit: 'NHANES III Anthropometry Manual, 1988, Exhibit 3-10. Public domain, CDC.',
+  },
 };
 
 export function SitePopup({ site, sex, onClose }: { site: SkinfoldSite; sex: Sex; onClose: () => void }) {
@@ -97,16 +101,16 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
   if (site === 'midaxillary') {
     return (
       <SideTorso>
-        <Fold x1={92} y1={132} x2={92} y2={162} />
+        <Fold x1={78} y1={148} x2={78} y2={178} />
       </SideTorso>
     );
   }
   if (site === 'thigh') {
     return (
       <ThighFigure>
-        <Guide x1={78} y1={40} x2={78} y2={200} />
-        <Fold x1={78} y1={108} x2={78} y2={138} />
-        <Dot x={78} y={206} />
+        <Guide x1={71} y1={44} x2={71} y2={228} />
+        <Fold x1={71} y1={120} x2={71} y2={150} />
+        <Dot x={71} y={236} />
       </ThighFigure>
     );
   }
@@ -115,14 +119,8 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
       {site === 'chest' && <ChestMark sex={sex} />}
       {site === 'abdominal' && (
         <>
-          <Dot x={100} y={178} />
-          <Fold x1={86} y1={164} x2={86} y2={194} />
-        </>
-      )}
-      {site === 'suprailiac' && (
-        <>
-          <Guide x1={52} y1={200} x2={86} y2={214} />
-          <Fold x1={58} y1={188} x2={78} y2={204} />
+          <Dot x={100} y={214} />
+          <Fold x1={88} y1={200} x2={88} y2={228} />
         </>
       )}
     </FrontTorso>
@@ -130,8 +128,8 @@ function SiteFigure({ site, sex }: { site: SkinfoldSite; sex: Sex }) {
 }
 
 function ChestMark({ sex }: { sex: Sex }) {
-  const axilla = { x: 58, y: 112 };
-  const nipple = { x: 82, y: 138 };
+  const axilla = { x: 46, y: 150 };
+  const nipple = { x: 78, y: 168 };
   const t = sex === 'female' ? 1 / 3 : 1 / 2;
   const x = axilla.x + (nipple.x - axilla.x) * t;
   const y = axilla.y + (nipple.y - axilla.y) * t;
