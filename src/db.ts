@@ -1,6 +1,6 @@
-import audreyProgram from './programs/audrey.json';
-import bonnieProgram from './programs/bonnie.json';
-import danProgram from './programs/dan.json';
+import audreyProgram from './programs/audrey.json' with { type: 'json' };
+import bonnieProgram from './programs/bonnie.json' with { type: 'json' };
+import danProgram from './programs/dan.json' with { type: 'json' };
 import { DEFAULT_WEIGHT_KG } from './metrics';
 import { parseProgram, programStamp } from './program';
 import type { Activity, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
@@ -159,6 +159,20 @@ export async function getSummaryAt(profile: ProfileId): Promise<string | null> {
 
 export async function setSummaryAt(profile: ProfileId, iso: string): Promise<void> {
   await setMeta(`summaryAt:${profile}`, iso);
+}
+
+export async function getSummaryIds(profile: ProfileId): Promise<string[]> {
+  const value = await getMeta(`summaryIds:${profile}`);
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+}
+
+export async function setSummaryDelivery(profile: ProfileId, at: string, ids: string[]): Promise<void> {
+  const transaction = await access('meta', 'readwrite');
+  const store = transaction.objectStore('meta');
+  store.put(at, `summaryAt:${profile}`);
+  store.put(clone(ids), `summaryIds:${profile}`);
+  await finish(transaction, 'save');
 }
 
 function fetchProgram(url: string): Promise<Response> {

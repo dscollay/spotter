@@ -40,6 +40,7 @@ import {
 } from './db';
 import { profileName } from './format';
 import { nextDayIndex } from './program';
+import { loadCoachCursor } from './summary';
 import type { Activity, CheckIn, Day, ProfileId, Program, Session, Skinfold, Tape, WeighIn } from './types';
 import { PROFILE_IDS, PROFILE_NAMES } from './types';
 import { unlockAudio } from './audio';
@@ -84,7 +85,12 @@ export function App() {
         setPersisted(storage);
         if (active) {
           setProfile(active);
-          const [nextProgram, logs, storedWeights] = await Promise.all([getProgram(active), loadHousehold(), getDefaultWeights()]);
+          const [nextProgram, logs, storedWeights] = await Promise.all([
+            getProgram(active),
+            loadHousehold(),
+            getDefaultWeights(),
+            loadCoachCursor(active),
+          ]);
           if (!live) return;
           setProgram(nextProgram);
           setHousehold(logs);
@@ -127,6 +133,7 @@ export function App() {
       loadHousehold(),
       getLastBackup(),
       getDefaultWeights(),
+      loadCoachCursor(next),
     ]);
     setProgram(nextProgram);
     setHousehold(logs);
