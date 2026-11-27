@@ -13,6 +13,7 @@ import {
   withinRange,
 } from '../src/metrics.ts';
 import { buildSteps, latestSet, nextDayIndex, nextExercise, parseProgram } from '../src/program.ts';
+import { buildCoachSummary, sendCoachSummary, sessionsForCoachPacket, shareFailure } from '../src/summary.ts';
 import type { Program, Session, Skinfold } from '../src/types.ts';
 
 function readJson(name: string): unknown {
@@ -441,5 +442,138 @@ const sore = [
   { profile: 'dan', startedAt: '2026-11-20T08:00:00.000Z', checkIn: { sleep: 4, energy: 4, soreness: 4 } },
 ] as Session[];
 assert.equal(readiness(sore, 'dan', now).easeOff, true);
+
+const dayB = coachSession({
+  id: 'day-b',
+  status: 'completed',
+  startedAt: '2026-11-27T02:10:00.000Z',
+  finishedAt: '2026-11-27T03:00:00.000Z',
+  durationSec: 3000,
+});
+const poisonedAt = '2026-11-27T03:50:10.000Z';
+const exportedAt = new Date('2026-11-27T03:50:13.000Z');
+const missed = buildCoachSummary('bonnie', [dayB], poisonedAt, exportedAt);
+assert.equal(missed.sessions.length, 1);
+assert.equal(missed.sessions[0].day, 'Day B');
+assert.equal(missed.to, '2026-11-27T03:50:13.000Z');
+assert.equal(missed.from, new Date(exportedAt.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString());
+const alreadySent = buildCoachSummary('bonnie', [dayB], poisonedAt, exportedAt, ['day-b']);
+assert.equal(alreadySent.sessions.length, 0);
+
+const finishedAfterStamp = coachSession({
+  id: 'late',
+  status: 'completed',
+  startedAt: '2026-11-27T03:00:00.000Z',
+  finishedAt: '2026-11-27T04:05:00.000Z',
+  durationSec: 3900,
+});
+const byFinish = buildCoachSummary('bonnie', [finishedAfterStamp], poisonedAt, new Date('2026-11-27T04:10:00.000Z'));
+assert.equal(byFinish.sessions.length, 1);
+assert.equal(byFinish.from, poisonedAt);
+
+const offsetFinish = coachSession({
+  id: 'offset',
+  status: 'completed',
+  startedAt: '2026-11-26T21:00:00.000Z',
+  finishedAt: '2026-11-26T21:00:00-08:00',
+  durationSec: 3600,
+});
+assert.equal(offsetFinish.finishedAt >= poisonedAt, false);
+const byInstant = sessionsForCoachPacket([offsetFinish], poisonedAt, [], Date.parse('2026-11-27T05:10:00.000Z'));
+assert.equal(byInstant.sessions.length, 1);
+assert.equal(byInstant.from, poisonedAt);
+
+const inProgress = coachSession({
+  id: 'open',
+  status: 'in_progress',
+  startedAt: '2026-11-27T04:00:00.000Z',
+  finishedAt: null,
+});
+assert.equal(sessionsForCoachPacket([inProgress], '2026-11-27T03:00:00.000Z', [], Date.parse('2026-11-27T05:00:00.000Z')).sessions.length, 0);
+
+const tooOld = coachSession({
+  id: 'old',
+  status: 'completed',
+  startedAt: '2026-11-10T02:00:00.000Z',
+  finishedAt: '2026-11-10T03:00:00.000Z',
+  durationSec: 3600,
+});
+assert.equal(buildCoachSummary('bonnie', [tooOld], poisonedAt, exportedAt).sessions.length, 0);
+
+const sinceWednesday = buildCoachSummary('bonnie', [dayB], '2026-11-25T08:00:00.000Z', exportedAt);
+assert.equal(sinceWednesday.sessions.length, 1);
+assert.equal(sinceWednesday.from, '2026-11-25T08:00:00.000Z');
+
+assert.equal(shareFailure({ name: 'AbortError' }), 'cancelled');
+assert.equal(shareFailure(new DOMException('The operation was aborted.', 'AbortError')), 'cancelled');
+assert.equal(shareFailure(new DOMException('A share is in progress.', 'InvalidStateError')), 'cancelled');
+assert.equal(shareFailure(new DOMException('Must be handling a user gesture.', 'NotAllowedError')), 'undelivered');
+
+const previousNavigator = globalThis.navigator;
+let dbOpens = 0;
+Object.defineProperty(globalThis, 'indexedDB', {
+  configurable: true,
+  value: {
+    open() {
+      dbOpens += 1;
+      throw new Error('delivery was recorded');
+    },
+  },
+});
+const link = { href: '', download: '', click() {}, remove() {} };
+Object.defineProperty(globalThis, 'document', {
+  configurable: true,
+  value: {
+    createElement: () => link,
+    body: { appendChild() {}, removeChild() {} },
+  },
+});
+Object.assign(URL, { createObjectURL: () => 'blob:spotter', revokeObjectURL: () => {} });
+
+function installShare(share: () => Promise<void>) {
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    value: { share, clipboard: { async writeText() {} } },
+  });
+}
+
+const recent = coachSession({
+  id: 'recent',
+  status: 'completed',
+  startedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+  finishedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  durationSec: 1800,
+});
+installShare(() => Promise.reject({ name: 'AbortError' }));
+assert.equal(await sendCoachSummary('bonnie', [recent]), 'cancelled');
+assert.equal(dbOpens, 0);
+
+installShare(() => Promise.reject(new DOMException('Must be handling a user gesture.', 'NotAllowedError')));
+assert.equal(await sendCoachSummary('bonnie', [recent]), 'saved');
+assert.equal(dbOpens, 0);
+assert.equal(link.download, 'spotter-bonnie.json');
+
+installShare(() => Promise.resolve());
+assert.equal(await sendCoachSummary('bonnie', [recent]), 'sent');
+assert.equal(dbOpens, 1);
+
+Object.defineProperty(globalThis, 'navigator', { configurable: true, value: previousNavigator });
+
+function coachSession(patch: Partial<Session> & Pick<Session, 'id' | 'status' | 'startedAt' | 'finishedAt'>): Session {
+  return {
+    profile: 'bonnie',
+    programName: 'block',
+    programStartDate: '2026-11-16',
+    dayName: 'Day B',
+    day: bonnieProgram.days[0],
+    checkIn: { sleep: 4, energy: 4, soreness: 2 },
+    durationSec: null,
+    stepIndex: 0,
+    sets: [],
+    circuitsCompleted: 1,
+    circuitsPlanned: 1,
+    ...patch,
+  };
+}
 
 console.log('program checks passed');
